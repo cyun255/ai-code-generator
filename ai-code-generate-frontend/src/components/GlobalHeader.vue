@@ -2,7 +2,7 @@
   <header class="header">
     <div class="logo">
       <img src="/src/assets/logo.svg" alt="Logo" class="logo-img" />
-      <span class="logo-title">AI 零代码应用生成平台</span>
+      <span class="logo-title">AI 应用生成平台</span>
     </div>
     <nav class="menu">
       <a-menu mode="horizontal" :selected-keys="[activeMenu]">
@@ -12,17 +12,44 @@
       </a-menu>
     </nav>
     <div class="login-btn">
-      <a-button type="primary">登录</a-button>
+      <a-button v-if="!userStore.userInfo.id" type="primary" @click="router.push('/login')"
+        >登录
+      </a-button>
+      <a-dropdown v-else trigger="hover">
+        <a-space>
+          <a-avatar class="user-avatar">
+            <span v-show="!userStore.userInfo.avatar"
+              >{{ userStore.userInfo.name?.slice(0, 1) }}
+            </span>
+            <img v-show="userStore.userInfo.avatar" :src="userStore.userInfo.avatar" />
+          </a-avatar>
+          {{ userStore.userInfo.name || '未登录' }}
+        </a-space>
+        <template #content>
+          <a-doption @click="logout">
+            <template #icon> <icon-poweroff /> </template>
+            <template #default> 退出登录 </template>
+          </a-doption>
+        </template>
+      </a-dropdown>
     </div>
   </header>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { useUserStore } from '@/stores/user'
+import { computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { IconPoweroff } from '@arco-design/web-vue/es/icon'
+import { Message } from '@arco-design/web-vue'
 
 const router = useRouter()
 const route = useRoute()
+const userStore = useUserStore()
+
+onMounted(() => {
+  userStore.getInfo()
+})
 
 const menus = [
   { title: '首页', path: '/' },
@@ -31,13 +58,18 @@ const menus = [
 
 const activeMenu = computed(() => {
   const found = menus.find((item) => route.path === item.path)
-  return found ? found.path : menus[0].path
+  return found?.path || ''
 })
 
 function goRoute(path: string) {
   if (route.path !== path) {
     router.push(path)
   }
+}
+
+const logout = () => {
+  userStore.logout()
+  Message.success('已退出登录')
 }
 </script>
 
@@ -71,14 +103,17 @@ function goRoute(path: string) {
     justify-content: center;
     margin: 0 32px;
     :deep(.arco-menu) {
-      background: transparent;
       border-bottom: none;
+      background-color: transparent;
     }
   }
   .login-btn {
     min-width: 80px;
     display: flex;
     justify-content: flex-end;
+    .user-avatar {
+      background-color: #3370ff;
+    }
   }
 }
 

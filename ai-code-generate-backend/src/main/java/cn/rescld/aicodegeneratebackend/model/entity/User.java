@@ -1,0 +1,89 @@
+package cn.rescld.aicodegeneratebackend.model.entity;
+
+import com.mybatisflex.annotation.Column;
+import com.mybatisflex.annotation.Id;
+import com.mybatisflex.annotation.KeyType;
+import com.mybatisflex.annotation.Table;
+import java.io.Serializable;
+import java.time.LocalDateTime;
+
+import java.io.Serial;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+/**
+ * 用户表 实体类。
+ *
+ * @author 残云cyun
+ * @since 2025-08-01
+ */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Table("user")
+public class User implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = -4808847687714757978L;
+
+    /**
+     * id
+     */
+    @Id(keyType = KeyType.Auto)
+    private Long id;
+
+    /**
+     * 用户名
+     */
+    private String username;
+
+    /**
+     * 密码
+     */
+    private String password;
+
+    /**
+     * 展示的用户昵称
+     */
+    private String name;
+
+    /**
+     * 用户头像超链接
+     */
+    private String avatar;
+
+    /**
+     * 个人简介
+     */
+    private String profile;
+
+    /**
+     * 0-admin; 1-user
+     */
+    private Integer role;
+
+    /**
+     * 密码加盐
+     */
+    private String salt;
+
+    /**
+     * 创建时间
+     */
+    private LocalDateTime createTime;
+
+    /**
+     * 更新时间
+     */
+    private LocalDateTime updateTime;
+
+    /**
+     * 是否删除
+     */
+    @Column(isLogicDelete = true)
+    private Integer isDelete;
+}

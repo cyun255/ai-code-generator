@@ -21,7 +21,7 @@ import GlobalFooter from '../components/GlobalFooter.vue'
 
   .main {
     flex: 1;
-    padding: 24px 32px;
+    padding: 24px 0px;
     background: #f7f8fa;
   }
 }

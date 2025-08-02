@@ -1,4 +1,5 @@
 import './assets/main.css'
+import '@arco-design/web-vue/es/message/style/css.js'
 
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
