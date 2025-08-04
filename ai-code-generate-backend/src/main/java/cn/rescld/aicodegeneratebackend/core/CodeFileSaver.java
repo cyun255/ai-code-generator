@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 /**
  * 将 AI 生成的代码保存到本地
  */
+@Deprecated
 public class CodeFileSaver {
 
     private final static String ROOT_DIR =

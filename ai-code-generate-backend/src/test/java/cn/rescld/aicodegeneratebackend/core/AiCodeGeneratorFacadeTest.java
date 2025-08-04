@@ -20,7 +20,7 @@ class AiCodeGeneratorFacadeTest {
     @Test
     void generateAndSaveMultiCode() {
         String message = "给我生成一份登陆页面，不超过20行代码";
-        Flux<String> result = aiCodeGeneratorFacade.generateAndSaveCode(CodeGenTypeEnum.MULTI_FILE, message);
+        Flux<String> result = aiCodeGeneratorFacade.generateAndSaveCode(message, CodeGenTypeEnum.MULTI_FILE);
         List<String> list = result.collectList().block();
         Assertions.assertNotNull(list);
         System.out.println(String.join("", list));
@@ -29,7 +29,7 @@ class AiCodeGeneratorFacadeTest {
     @Test
     void generateAndSaveSingleHtmlCode() {
         String message = "给我生成一份登陆页面，不超过20行代码";
-        Flux<String> result = aiCodeGeneratorFacade.generateAndSaveCode(CodeGenTypeEnum.SINGLE_HTML, message);
+        Flux<String> result = aiCodeGeneratorFacade.generateAndSaveCode(message, CodeGenTypeEnum.SINGLE_HTML);
         List<String> list = result.collectList().block();
         Assertions.assertNotNull(list);
         System.out.println(String.join("", list));

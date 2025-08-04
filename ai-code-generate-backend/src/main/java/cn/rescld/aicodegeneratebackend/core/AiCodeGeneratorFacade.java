@@ -1,8 +1,8 @@
 package cn.rescld.aicodegeneratebackend.core;
 
 import cn.rescld.aicodegeneratebackend.ai.AiCodeService;
-import cn.rescld.aicodegeneratebackend.ai.model.MultiFileCodeResult;
-import cn.rescld.aicodegeneratebackend.ai.model.SingleHtmlCodeResult;
+import cn.rescld.aicodegeneratebackend.core.parser.CodeParserExecutor;
+import cn.rescld.aicodegeneratebackend.core.saver.CodeFileSaverExecutor;
 import cn.rescld.aicodegeneratebackend.exception.ErrorCode;
 import cn.rescld.aicodegeneratebackend.exception.ThrowUtils;
 import cn.rescld.aicodegeneratebackend.model.enums.CodeGenTypeEnum;
@@ -31,17 +31,16 @@ public class AiCodeGeneratorFacade {
      * @param userMessage 用户提示词
      * @return 文件保存的目录
      */
-    public Flux<String> generateAndSaveCode(CodeGenTypeEnum type, String userMessage) {
-        ThrowUtils.throwIf(type == null, ErrorCode.SYSTEM_ERROR, "不支持该生产方式");
-        return switch (type) {
-            case SINGLE_HTML -> generateAndSaveSingleHtmlCode(userMessage);
-            case MULTI_FILE -> generateAndSaveMultiCode(userMessage);
-        };
-    }
+    public Flux<String> generateAndSaveCode(String userMessage, CodeGenTypeEnum type) {
+        ThrowUtils.throwIf(type == null, ErrorCode.SYSTEM_ERROR, "生成方式不可为空");
 
-    private Flux<String> generateAndSaveMultiCode(String userMessage) {
-        // 调用 AI 大模型，生成结果
-        Flux<String> result = aiCodeService.generateMultiFileCode(userMessage);
+        // 调用 AI 大模型生成代码
+        Flux<String> result = null;
+        switch (type) {
+            case SINGLE_HTML -> result = aiCodeService.generateSingleHtmlCode(userMessage);
+            case MULTI_FILE -> result = aiCodeService.generateMultiFileCode(userMessage);
+        }
+
         StringBuilder builder = new StringBuilder();
         return result
                 // 将每次生成的结果保存下来
@@ -49,24 +48,8 @@ public class AiCodeGeneratorFacade {
                 // 全部完成后，将代码保存到本地
                 .doOnComplete(() -> {
                     try {
-                        MultiFileCodeResult parsed = CodeParser.parseMultiFileCode(builder.toString());
-                        File file = CodeFileSaver.saveMultiFile(parsed);
-                        log.info("文件保存成功：{}", file.getAbsolutePath());
-                    } catch (Exception e) {
-                        log.error("文件保存失败：{}", e.getMessage());
-                    }
-                });
-    }
-
-    private Flux<String> generateAndSaveSingleHtmlCode(String userMessage) {
-        Flux<String> result = aiCodeService.generateSingleHtmlCode(userMessage);
-        StringBuilder builder = new StringBuilder();
-        return result
-                .doOnNext(builder::append)
-                .doOnComplete(() -> {
-                    try {
-                        SingleHtmlCodeResult parsed = CodeParser.parseHtmlCode(builder.toString());
-                        File file = CodeFileSaver.saveSingleHtmlFile(parsed);
+                        Object parsed = CodeParserExecutor.execute(builder.toString(), type);
+                        File file = CodeFileSaverExecutor.execute(parsed, type);
                         log.info("文件保存成功：{}", file.getAbsolutePath());
                     } catch (Exception e) {
                         log.error("文件保存失败：{}", e.getMessage());
