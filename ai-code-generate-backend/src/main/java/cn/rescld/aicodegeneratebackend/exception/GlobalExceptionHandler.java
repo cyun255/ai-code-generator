@@ -1,7 +1,6 @@
 package cn.rescld.aicodegeneratebackend.exception;
 
 import cn.dev33.satoken.exception.NotLoginException;
-import cn.dev33.satoken.util.SaResult;
 import cn.rescld.aicodegeneratebackend.common.BaseResponse;
 import cn.rescld.aicodegeneratebackend.common.ResultUtils;
 import io.swagger.v3.oas.annotations.Hidden;

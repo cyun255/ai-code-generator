@@ -36,3 +36,12 @@ sa-token:
   token-style: uuid
   # 是否输出操作日志
   is-log: true
+langchain4j:
+  open-ai:
+    streaming-chat-model:
+      base-url: https://api.deepseek.com/v1
+      api-key: ${DEEPSEEK_API_KEY}
+      model-name: deepseek-chat
+      max-tokens: 8192
+      log-requests: true
+      log-responses: true

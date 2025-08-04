@@ -49,6 +49,25 @@
             <version>1.44.0</version>
         </dependency>
 
+        <!-- https://docs.langchain4j.info/tutorials/spring-boot-integration -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-open-ai-spring-boot-starter</artifactId>
+            <version>1.2.0-beta8</version>
+        </dependency>
+
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-spring-boot-starter</artifactId>
+            <version>1.2.0-beta8</version>
+        </dependency>
+
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-reactor</artifactId>
+            <version>1.2.0-beta8</version>
+        </dependency>
+
         <!-- https://mybatis-flex.com/ -->
         <dependency>
             <groupId>com.mybatis-flex</groupId>
