@@ -1,32 +1,25 @@
 package cn.rescld.aicodegeneratebackend.controller;
 
 import cn.dev33.satoken.annotation.SaCheckLogin;
+import cn.dev33.satoken.annotation.SaCheckRole;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.rescld.aicodegeneratebackend.common.BaseResponse;
 import cn.rescld.aicodegeneratebackend.common.ResultUtils;
 import cn.rescld.aicodegeneratebackend.exception.ErrorCode;
 import cn.rescld.aicodegeneratebackend.exception.ThrowUtils;
-import cn.rescld.aicodegeneratebackend.model.dto.UserLoginRequest;
-import cn.rescld.aicodegeneratebackend.model.dto.UserRegisterRequest;
+import cn.rescld.aicodegeneratebackend.model.dto.user.*;
 import cn.rescld.aicodegeneratebackend.model.vo.UserVO;
 import com.mybatisflex.core.paginate.Page;
-import com.mybatisflex.core.query.QueryChain;
-import com.mybatisflex.core.query.QueryWrapper;
 import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 import cn.rescld.aicodegeneratebackend.model.entity.User;
 import cn.rescld.aicodegeneratebackend.service.UserService;
-import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 用户表 控制层。
@@ -34,6 +27,7 @@ import java.util.List;
  * @author 残云cyun
  * @since 2025-08-01
  */
+@Slf4j
 @RestController
 @RequestMapping("/user")
 public class UserController {
@@ -98,13 +92,13 @@ public class UserController {
     }
 
     /**
-     * 根据主键获取用户表。
+     * 根据登录态获取用户信息。
      *
      * @return 用户详情信息
      */
     @GetMapping
     public BaseResponse<UserVO> getInfo() {
-        Object id = StpUtil.getLoginId();
+        Long id = StpUtil.getLoginIdAsLong();
         User user = userService.queryChain().eq(User::getId, id).one();
         ThrowUtils.throwIf(user == null, ErrorCode.PARAMS_ERROR, "用户不存在");
         UserVO vo = new UserVO();
@@ -118,49 +112,95 @@ public class UserController {
     @SaCheckLogin
     @DeleteMapping
     public BaseResponse<?> remove() {
-        Object id = StpUtil.getLoginId();
-        QueryWrapper wrapper = new QueryWrapper().eq(User::getId, id);
-        if (userService.remove(wrapper)) {
+        Long id = StpUtil.getLoginIdAsLong();
+        if (userService.removeById(id)) {
             StpUtil.logout();
             return ResultUtils.success(true);
         }
         return ResultUtils.error(ErrorCode.SYSTEM_ERROR);
     }
 
+    /**
+     * 根据登录态更新用户信息。
+     *
+     * @param request 用户表
+     * @return 最新的用户信息
+     */
+    @SaCheckLogin
+    @PutMapping
+    public BaseResponse<UserVO> update(@RequestBody UserUpdateRequest request) {
+        ThrowUtils.throwIf(request == null, ErrorCode.PARAMS_ERROR);
+
+        // 从数据库中查询用户信息
+        Long id = StpUtil.getLoginIdAsLong();
+        User user = userService.update(id, request);
+
+        // 将最新的信息返回给前端
+        UserVO vo = new UserVO();
+        BeanUtils.copyProperties(user, vo);
+        return ResultUtils.success(vo);
+    }
+
     // endregion
 
-    // TODO: 下面懒得写了，后期补上
-
-    /**
-     * 根据主键更新用户表。
-     *
-     * @param user 用户表
-     * @return {@code true} 更新成功，{@code false} 更新失败
-     */
-    @PutMapping("update")
-    public boolean update(@RequestBody User user) {
-        return userService.updateById(user);
-    }
-
-    /**
-     * 查询所有用户表。
-     *
-     * @return 所有数据
-     */
-    @GetMapping("list")
-    public List<User> list() {
-        return userService.list();
-    }
+    // region admin
 
     /**
      * 分页查询用户表。
      *
-     * @param page 分页对象
-     * @return 分页对象
+     * @param request 分页对象
+     * @return 脱敏后的查询结果
      */
+    @SaCheckRole("admin")
     @GetMapping("page")
-    public Page<User> page(Page<User> page) {
-        return userService.page(page);
+    public BaseResponse<Page<UserVO>> page(@ModelAttribute UserQueryRequest request) {
+        // 查询分页结果
+        Page<User> page = new Page<>();
+        page.setPageNumber(request.getCurrent());
+        page.setPageSize(request.getPageSize());
+        userService.queryChain()
+                .eq(User::getId, request.getId())
+                .eq(User::getRole, request.getRole())
+                .like(User::getName, request.getName())
+                .like(User::getUsername, request.getUsername())
+                .like(User::getProfile, request.getProfile())
+                .page(page);
+
+        // 数据脱敏
+        List<UserVO> collect = page.getRecords().stream().map(user -> {
+            UserVO vo = new UserVO();
+            BeanUtils.copyProperties(user, vo);
+            return vo;
+        }).collect(Collectors.toList());
+        Page<UserVO> vo = new Page<>();
+        vo.setPageNumber(page.getPageNumber());
+        vo.setPageSize(page.getPageSize());
+        vo.setTotalRow(page.getTotalRow());
+        vo.setTotalPage(page.getTotalPage());
+        vo.setRecords(collect);
+        return ResultUtils.success(vo);
     }
 
+    /**
+     * 根据用户 id 更新用户信息
+     *
+     * @param request 更新对象
+     * @return 脱敏后的最新用户信息
+     */
+    @SaCheckRole("admin")
+    @PostMapping("update")
+    public BaseResponse<UserVO> updateById(@RequestBody AdminUpdateRequest request) {
+        ThrowUtils.throwIf(request == null, ErrorCode.PARAMS_ERROR);
+
+        // 从数据库中查询用户信息
+        Long id = request.getId();
+        User user = userService.update(id, request);
+
+        // 将最新的信息返回给前端
+        UserVO vo = new UserVO();
+        BeanUtils.copyProperties(user, vo);
+        return ResultUtils.success(vo);
+    }
+
+    // endregion
 }

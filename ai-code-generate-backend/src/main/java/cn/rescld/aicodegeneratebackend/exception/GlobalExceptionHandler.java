@@ -1,6 +1,7 @@
 package cn.rescld.aicodegeneratebackend.exception;
 
 import cn.dev33.satoken.exception.NotLoginException;
+import cn.dev33.satoken.exception.NotRoleException;
 import cn.rescld.aicodegeneratebackend.common.BaseResponse;
 import cn.rescld.aicodegeneratebackend.common.ResultUtils;
 import io.swagger.v3.oas.annotations.Hidden;
@@ -25,7 +26,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NotLoginException.class)
     public BaseResponse<?> notLoginExceptionHandler(NotLoginException e) {
         log.error("NotLoginException", e);
-        return ResultUtils.error(ErrorCode.SYSTEM_ERROR, e.getMessage());
+        return ResultUtils.error(ErrorCode.NOT_LOGIN_ERROR);
+    }
+
+    @ExceptionHandler(NotRoleException.class)
+    public BaseResponse<?> notRoleExceptionHandler(NotRoleException e) {
+        log.error("NotRoleException", e);
+        return ResultUtils.error(ErrorCode.NO_AUTH_ERROR);
     }
 
     @ExceptionHandler(RuntimeException.class)

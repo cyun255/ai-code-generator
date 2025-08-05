@@ -1,5 +1,6 @@
 package cn.rescld.aicodegeneratebackend.service;
 
+import cn.rescld.aicodegeneratebackend.model.vo.UserVO;
 import com.mybatisflex.core.service.IService;
 import cn.rescld.aicodegeneratebackend.model.entity.User;
 
@@ -27,4 +28,14 @@ public interface UserService extends IService<User> {
      * @return 用户信息
      */
     User login(String username, String password);
+
+    /**
+     * 根据用户 id 更新用户信息
+     *
+     * @param id      用户 id
+     * @param request 需要更新的用户信息
+     * @param <T>     更新请求对象
+     * @return 最新的用户信息
+     */
+    <T> User update(Long id, T request);
 }

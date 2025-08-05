@@ -22,9 +22,6 @@ import lombok.NoArgsConstructor;
  * @since 2025-08-01
  */
 @Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class UserVO implements Serializable {
     @Serial
     private static final long serialVersionUID = 9054411253572002981L;
@@ -58,4 +55,19 @@ public class UserVO implements Serializable {
      * 0-admin; 1-user
      */
     private Integer role;
+
+    /**
+     * 创建时间
+     */
+    private LocalDateTime createTime;
+
+    /**
+     * 更新时间
+     */
+    private LocalDateTime updateTime;
+
+    /**
+     * 是否删除
+     */
+    private Integer isDelete;
 }

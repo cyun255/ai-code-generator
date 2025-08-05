@@ -1,13 +1,17 @@
 package cn.rescld.aicodegeneratebackend.service.impl;
 
+import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.crypto.digest.DigestUtil;
+import cn.rescld.aicodegeneratebackend.common.ResultUtils;
 import cn.rescld.aicodegeneratebackend.exception.ErrorCode;
 import cn.rescld.aicodegeneratebackend.exception.ThrowUtils;
+import cn.rescld.aicodegeneratebackend.model.vo.UserVO;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import cn.rescld.aicodegeneratebackend.model.entity.User;
 import cn.rescld.aicodegeneratebackend.mapper.UserMapper;
 import cn.rescld.aicodegeneratebackend.service.UserService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 /**
@@ -30,6 +34,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 ErrorCode.PARAMS_ERROR, "密码长度为8~32位");
 
         // 检查用户名是否已被注册
+        // TODO: 因为使用了 Mybatis Flex 逻辑删除，导致这里查不到已经被注销的用户，等后续修复
         boolean exists = this.queryChain()
                 .eq(User::getUsername, username)
                 .exists();
@@ -76,6 +81,22 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         ThrowUtils.throwIf(user == null, ErrorCode.PARAMS_ERROR, "用户名或密码错误");
 
         return user;
+    }
+
+    @Override
+    public <T> User update(Long id, T request) {
+        ThrowUtils.throwIf(request == null, ErrorCode.PARAMS_ERROR);
+
+        // 从数据库中查询用户信息
+        User user = this.getById(id);
+        ThrowUtils.throwIf(user == null, ErrorCode.PARAMS_ERROR, "用户不存在");
+
+        // 将最新的信息插入数据库
+        BeanUtils.copyProperties(request, user);
+        this.updateById(user);
+
+        // 将最新的信息返回
+        return this.getById(id);
     }
 
     private String encryptPassword(String password, String salt) {

@@ -1,4 +1,4 @@
-package cn.rescld.aicodegeneratebackend.model.dto;
+package cn.rescld.aicodegeneratebackend.model.dto.user;
 
 import lombok.Data;
 
@@ -6,10 +6,10 @@ import java.io.Serial;
 import java.io.Serializable;
 
 @Data
-public class UserLoginRequest implements Serializable {
+public class UserRegisterRequest implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 964019593749517414L;
+    private static final long serialVersionUID = 5284024200941374798L;
 
     /**
      * 用户名
