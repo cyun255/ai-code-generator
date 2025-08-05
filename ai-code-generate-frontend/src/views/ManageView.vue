@@ -133,6 +133,9 @@
             <a-option :value="1">普通用户</a-option>
           </a-select>
         </a-form-item>
+        <a-form-item label="是否删除" field="isDelete">
+          <a-switch v-model="editForm.isDelete" :checked-value="1" :unchecked-value="0" />
+        </a-form-item>
       </a-form>
     </a-modal>
   </div>
@@ -180,6 +183,7 @@ interface EditForm {
   name: string
   profile?: string
   role: number
+  isDelete: number
 }
 
 // 响应式数据
@@ -203,6 +207,7 @@ const editForm = reactive<EditForm>({
   name: '',
   profile: '',
   role: 1,
+  isDelete: 0,
 })
 
 // 获取用户列表
@@ -265,6 +270,7 @@ const handleEdit = (record: UserVO) => {
   editForm.name = record.name
   editForm.profile = record.profile || ''
   editForm.role = record.role
+  editForm.isDelete = record.isDelete
   editModalVisible.value = true
 }
 

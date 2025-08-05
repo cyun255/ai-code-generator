@@ -9,6 +9,7 @@ import cn.rescld.aicodegeneratebackend.common.ResultUtils;
 import cn.rescld.aicodegeneratebackend.exception.ErrorCode;
 import cn.rescld.aicodegeneratebackend.exception.ThrowUtils;
 import cn.rescld.aicodegeneratebackend.model.dto.user.*;
+import cn.rescld.aicodegeneratebackend.model.enums.IsDeleteEnum;
 import cn.rescld.aicodegeneratebackend.model.vo.UserVO;
 import com.mybatisflex.core.paginate.Page;
 import jakarta.annotation.Resource;
@@ -96,6 +97,7 @@ public class UserController {
      *
      * @return 用户详情信息
      */
+    @SaCheckLogin
     @GetMapping
     public BaseResponse<UserVO> getInfo() {
         Long id = StpUtil.getLoginIdAsLong();
@@ -107,17 +109,19 @@ public class UserController {
     }
 
     /**
-     * 删除用户。
+     * 根据登录态删除用户。
      */
     @SaCheckLogin
     @DeleteMapping
     public BaseResponse<?> remove() {
         Long id = StpUtil.getLoginIdAsLong();
-        if (userService.removeById(id)) {
-            StpUtil.logout();
-            return ResultUtils.success(true);
+        User user = userService.getById(id);
+        user.setIsDelete(IsDeleteEnum.DELETED.getValue());
+        boolean update = userService.updateById(user);
+        if (update) {
+            return ResultUtils.success("用户删除成功");
         }
-        return ResultUtils.error(ErrorCode.SYSTEM_ERROR);
+        return ResultUtils.error(ErrorCode.SYSTEM_ERROR, "用户删除失败");
     }
 
     /**
@@ -133,7 +137,10 @@ public class UserController {
 
         // 从数据库中查询用户信息
         Long id = StpUtil.getLoginIdAsLong();
-        User user = userService.update(id, request);
+        AdminUpdateRequest updateRequest = new AdminUpdateRequest();
+        BeanUtils.copyProperties(request, updateRequest);
+        updateRequest.setId(id);
+        User user = userService.update(updateRequest);
 
         // 将最新的信息返回给前端
         UserVO vo = new UserVO();
@@ -193,8 +200,7 @@ public class UserController {
         ThrowUtils.throwIf(request == null, ErrorCode.PARAMS_ERROR);
 
         // 从数据库中查询用户信息
-        Long id = request.getId();
-        User user = userService.update(id, request);
+        User user = userService.update(request);
 
         // 将最新的信息返回给前端
         UserVO vo = new UserVO();

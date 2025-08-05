@@ -26,6 +26,7 @@ declare module 'vue' {
     AOption: typeof import('@arco-design/web-vue')['Option']
     ASelect: typeof import('@arco-design/web-vue')['Select']
     ASpace: typeof import('@arco-design/web-vue')['Space']
+    ASwitch: typeof import('@arco-design/web-vue')['Switch']
     ATable: typeof import('@arco-design/web-vue')['Table']
     ATableColumn: typeof import('@arco-design/web-vue')['TableColumn']
     ATag: typeof import('@arco-design/web-vue')['Tag']
