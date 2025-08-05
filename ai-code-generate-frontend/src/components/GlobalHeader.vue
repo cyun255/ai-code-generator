@@ -54,15 +54,17 @@ onMounted(() => {
 const menus = computed(() => {
   const baseMenus = [
     { title: '首页', path: '/' },
+    { title: '用户管理', path: '/admin/manage/user' },
     { title: '关于', path: '/about' },
   ]
 
   // 只有管理员才显示管理页面
-  if (userStore.userInfo.role === 0) {
-    baseMenus.push({ title: '用户管理', path: '/admin/manage/user' })
-  }
-
-  return baseMenus
+  return baseMenus.filter((item) => {
+    if (item.path.includes('/admin') && userStore.userInfo.role !== 0) {
+      return false
+    }
+    return true
+  })
 })
 
 const activeMenu = computed(() => {
