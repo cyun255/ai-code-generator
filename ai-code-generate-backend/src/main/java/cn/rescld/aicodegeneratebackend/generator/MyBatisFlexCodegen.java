@@ -7,12 +7,11 @@ import com.mybatisflex.codegen.config.GlobalConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
 import java.util.Map;
-import java.util.Objects;
 
 public class MyBatisFlexCodegen {
 
     // 需要生成代码的表名
-    private final static String[] TABLES = {"user"};
+    private final static String[] TABLES = {"app"};
 
     public static void main(String[] args) {
         // 读取配置信息
@@ -48,8 +47,7 @@ public class MyBatisFlexCodegen {
 
         // 设置表前缀和只生成哪些表，setGenerateTable 未配置时，生成所有表
         globalConfig.getStrategyConfig()
-                .setGenerateTable(TABLES)
-                .setLogicDeleteColumn("is_delete");
+                .setGenerateTable(TABLES);
 
         // 设置生成 entity 并启用 Lombok
         globalConfig.enableEntity()
