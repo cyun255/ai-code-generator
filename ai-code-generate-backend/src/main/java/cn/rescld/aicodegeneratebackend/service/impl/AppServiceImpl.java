@@ -75,6 +75,7 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
                 ErrorCode.PARAMS_ERROR, "应用不存在或无权限访问");
 
         App app = new App();
+        app.setId(existingApp.getId());
         app.setName(request.getName());
         this.updateById(app);
 
