@@ -21,11 +21,11 @@ public abstract class CodeFileSaverTemplate<T> {
      * @param result 代码结果对象
      * @return 保存的文件所在目录
      */
-    public final File save(T result) {
+    public final File save(T result, Long appId) {
         // 校验输入
         validateInput(result);
         // 生成唯一目录路径
-        String path = buildUniquePath();
+        String path = buildUniquePath(appId);
         // 保存文件
         saveFile(result, path);
         // 返回文件所在目录
@@ -46,7 +46,7 @@ public abstract class CodeFileSaverTemplate<T> {
      *
      * @return 唯一的目录路径
      */
-    protected abstract String buildUniquePath();
+    protected abstract String buildUniquePath(Long appId);
 
     /**
      * 由子类重写，将代码保存到本地文件中

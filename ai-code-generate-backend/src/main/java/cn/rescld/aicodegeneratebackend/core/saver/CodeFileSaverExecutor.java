@@ -14,10 +14,10 @@ public class CodeFileSaverExecutor {
     private static final SingleHtmlCodeSaver singleHtmlCodeSaver = new SingleHtmlCodeSaver();
     private static final MultiCodeSaver multiCodeSaver = new MultiCodeSaver();
 
-    public static File execute(Object result, CodeGenTypeEnum codeGenType) {
+    public static File execute(Object result, CodeGenTypeEnum codeGenType, Long appId) {
         return switch (codeGenType) {
-            case SINGLE_HTML -> singleHtmlCodeSaver.save((SingleHtmlCodeResult) result);
-            case MULTI_FILE -> multiCodeSaver.save((MultiFileCodeResult) result);
+            case SINGLE_HTML -> singleHtmlCodeSaver.save((SingleHtmlCodeResult) result, appId);
+            case MULTI_FILE -> multiCodeSaver.save((MultiFileCodeResult) result, appId);
         };
     }
 }

@@ -31,7 +31,7 @@ public class AiCodeGeneratorFacade {
      * @param userMessage 用户提示词
      * @return 文件保存的目录
      */
-    public Flux<String> generateAndSaveCode(String userMessage, CodeGenTypeEnum type) {
+    public Flux<String> generateAndSaveCode(String userMessage, CodeGenTypeEnum type, Long appId) {
         ThrowUtils.throwIf(type == null, ErrorCode.SYSTEM_ERROR, "生成方式不可为空");
 
         // 调用 AI 大模型生成代码
@@ -49,7 +49,7 @@ public class AiCodeGeneratorFacade {
                 .doOnComplete(() -> {
                     try {
                         Object parsed = CodeParserExecutor.execute(builder.toString(), type);
-                        File file = CodeFileSaverExecutor.execute(parsed, type);
+                        File file = CodeFileSaverExecutor.execute(parsed, type, appId);
                         log.info("文件保存成功：{}", file.getAbsolutePath());
                     } catch (Exception e) {
                         log.error("文件保存失败：{}", e.getMessage());
