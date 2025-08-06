@@ -1,6 +1,7 @@
 package cn.rescld.aicodegeneratebackend.service.impl;
 
 import cn.hutool.core.util.StrUtil;
+import cn.rescld.aicodegeneratebackend.core.AiCodeGeneratorFacade;
 import cn.rescld.aicodegeneratebackend.exception.ErrorCode;
 import cn.rescld.aicodegeneratebackend.exception.ThrowUtils;
 import cn.rescld.aicodegeneratebackend.mapper.AppMapper;
@@ -15,8 +16,10 @@ import cn.rescld.aicodegeneratebackend.model.vo.AppVO;
 import cn.rescld.aicodegeneratebackend.service.AppService;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
+import jakarta.annotation.Resource;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,6 +32,28 @@ import java.util.stream.Collectors;
  */
 @Service
 public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppService {
+
+    @Resource
+    private AiCodeGeneratorFacade aiCodeGeneratorFacade;
+
+    @Override
+    public Flux<String> chatToGenCode(Long appId, String message, Long uid) {
+        // 校验应用信息
+        App app = validateAppById(appId);
+
+        // 校验权限，只有应用创建者可以对话
+        boolean exists = this.queryChain()
+                .eq(App::getUserId, uid)
+                .exists();
+        ThrowUtils.throwIf(!exists, ErrorCode.NO_AUTH_ERROR);
+
+        // 获取应用生成类型
+        CodeGenTypeEnum type = CodeGenTypeEnum.getEnumByType(app.getCodeGenType());
+        ThrowUtils.throwIf(type == null, ErrorCode.PARAMS_ERROR);
+
+        return aiCodeGeneratorFacade
+                .generateAndSaveCode(message, type, appId);
+    }
 
     @Override
     public Long createApp(AppCreateRequest request, Long userId) {

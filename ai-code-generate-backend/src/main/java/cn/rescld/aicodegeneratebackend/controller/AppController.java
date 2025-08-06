@@ -4,6 +4,7 @@ import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.dev33.satoken.annotation.SaCheckRole;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
 import cn.rescld.aicodegeneratebackend.common.BaseResponse;
 import cn.rescld.aicodegeneratebackend.common.ResultUtils;
 import cn.rescld.aicodegeneratebackend.exception.ErrorCode;
@@ -17,7 +18,12 @@ import cn.rescld.aicodegeneratebackend.service.AppService;
 import com.mybatisflex.core.paginate.Page;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import java.util.Map;
 
 /**
  * 应用表 控制层。
@@ -32,6 +38,34 @@ public class AppController {
 
     @Resource
     private AppService appService;
+
+    @GetMapping("/chat")
+    public Flux<ServerSentEvent<String>> chatToGenCode(@RequestParam Long appId,
+                                                       @RequestParam String message) {
+        ThrowUtils.throwIf(appId == null || appId <= 0,
+                ErrorCode.PARAMS_ERROR, "无效应用id");
+        ThrowUtils.throwIf(StrUtil.isBlank(message),
+                ErrorCode.PARAMS_ERROR, "用户提示词不能为空");
+
+        // 与 AI 交互得到结果
+        Long uid = StpUtil.getLoginIdAsLong();
+        Flux<String> content = appService.chatToGenCode(appId, message, uid);
+        return content
+                // 将 AI 返回的结果封装成 JSON 返回
+                .map(chunk -> {
+                    Map<String, String> map = Map.of("d", chunk);
+                    String jsonStr = JSONUtil.toJsonStr(map);
+                    return ServerSentEvent.<String>builder()
+                            .data(jsonStr)
+                            .build();
+                })
+                // 最后返回一个 done 事件
+                .concatWith(Mono.just(
+                        ServerSentEvent.<String>builder()
+                                .event("done")
+                                .build()
+                ));
+    }
 
     // region 用户功能
 
@@ -57,7 +91,7 @@ public class AppController {
     /**
      * 用户更新自己的应用
      *
-     * @param id 应用ID
+     * @param id      应用ID
      * @param request 更新请求
      * @return 更新后的应用信息
      */
