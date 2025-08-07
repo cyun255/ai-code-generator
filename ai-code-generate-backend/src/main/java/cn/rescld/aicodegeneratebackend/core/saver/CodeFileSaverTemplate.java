@@ -1,6 +1,7 @@
 package cn.rescld.aicodegeneratebackend.core.saver;
 
 import cn.hutool.core.io.FileUtil;
+import cn.rescld.aicodegeneratebackend.constant.AppConstant;
 import cn.rescld.aicodegeneratebackend.exception.ErrorCode;
 import cn.rescld.aicodegeneratebackend.exception.ThrowUtils;
 
@@ -12,8 +13,7 @@ import java.nio.charset.StandardCharsets;
  */
 public abstract class CodeFileSaverTemplate<T> {
 
-    protected final static String ROOT_DIR =
-            System.getProperty("user.dir") + File.separator + "tmp" + File.separator + "output";
+    protected final String ROOT_DIR = AppConstant.CODE_GEN_ROOT;
 
     /**
      * 保存代码到本地文件的模板方法，不允许被修改

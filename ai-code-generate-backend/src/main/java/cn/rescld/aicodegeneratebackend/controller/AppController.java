@@ -9,10 +9,7 @@ import cn.rescld.aicodegeneratebackend.common.BaseResponse;
 import cn.rescld.aicodegeneratebackend.common.ResultUtils;
 import cn.rescld.aicodegeneratebackend.exception.ErrorCode;
 import cn.rescld.aicodegeneratebackend.exception.ThrowUtils;
-import cn.rescld.aicodegeneratebackend.model.dto.app.AdminAppUpdateRequest;
-import cn.rescld.aicodegeneratebackend.model.dto.app.AppCreateRequest;
-import cn.rescld.aicodegeneratebackend.model.dto.app.AppQueryRequest;
-import cn.rescld.aicodegeneratebackend.model.dto.app.AppUpdateRequest;
+import cn.rescld.aicodegeneratebackend.model.dto.app.*;
 import cn.rescld.aicodegeneratebackend.model.vo.AppVO;
 import cn.rescld.aicodegeneratebackend.service.AppService;
 import com.mybatisflex.core.paginate.Page;
@@ -65,6 +62,19 @@ public class AppController {
                                 .event("done")
                                 .build()
                 ));
+    }
+
+    @PostMapping("/deploy")
+    public BaseResponse<String> deploy(@RequestBody AppDeployRequest request) {
+        ThrowUtils.throwIf(request == null, ErrorCode.PARAMS_ERROR);
+
+        Long appId = request.getAppId();
+        ThrowUtils.throwIf(appId == null || appId <= 0, ErrorCode.PARAMS_ERROR);
+
+        Long uid = StpUtil.getLoginIdAsLong();
+        String url = appService.deployApp(uid, appId);
+
+        return ResultUtils.success(url);
     }
 
     // region 用户功能

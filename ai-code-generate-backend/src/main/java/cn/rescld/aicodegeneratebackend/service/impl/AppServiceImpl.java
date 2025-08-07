@@ -1,7 +1,12 @@
 package cn.rescld.aicodegeneratebackend.service.impl;
 
+import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.io.IORuntimeException;
+import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.rescld.aicodegeneratebackend.constant.AppConstant;
 import cn.rescld.aicodegeneratebackend.core.AiCodeGeneratorFacade;
+import cn.rescld.aicodegeneratebackend.exception.BusinessException;
 import cn.rescld.aicodegeneratebackend.exception.ErrorCode;
 import cn.rescld.aicodegeneratebackend.exception.ThrowUtils;
 import cn.rescld.aicodegeneratebackend.mapper.AppMapper;
@@ -21,6 +26,8 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
+import java.io.File;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -53,6 +60,45 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
 
         return aiCodeGeneratorFacade
                 .generateAndSaveCode(message, type, appId);
+    }
+
+    @Override
+    public String deployApp(Long uid, Long appId) {
+        // 只有应用的创建者可以部署
+        App app = this.getById(appId);
+        ThrowUtils.throwIf(app == null, ErrorCode.PARAMS_ERROR, "应用不存在");
+        ThrowUtils.throwIf(!app.getUserId().equals(uid), ErrorCode.NO_AUTH_ERROR);
+
+        // 获取部署 Key，若为空则创建随机字符
+        String deployKey = app.getDeployKey();
+        if (StrUtil.isBlank(deployKey)) {
+            deployKey = RandomUtil.randomString(8);
+        }
+
+        // 校验代码是否已生成
+        String sourceName = app.getCodeGenType() + "_" + app.getId().toString();
+        String sourcePath = AppConstant.CODE_GEN_ROOT + File.separator + sourceName;
+        File sourceDir = new File(sourcePath);
+        ThrowUtils.throwIf(!sourceDir.exists() || !sourceDir.isDirectory(),
+                ErrorCode.OPERATION_ERROR, "应用不存在");
+
+        // 将代码复制到部署目录
+        String deployPath = AppConstant.DEPLOY_ROOT + File.separator + deployKey;
+        try {
+            FileUtil.copyContent(sourceDir, new File(deployPath), true);
+        } catch (IORuntimeException e) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "部署失败：" + e.getMessage());
+        }
+
+        // 更新数据库信息
+        App updateApp = new App();
+        updateApp.setId(appId);
+        updateApp.setUserId(uid);
+        updateApp.setDeployKey(deployKey);
+        updateApp.setDeployTime(LocalDateTime.now());
+        this.updateById(updateApp);
+
+        return AppConstant.DEPLOY_DOMAIN + "/" + deployKey;
     }
 
     @Override
