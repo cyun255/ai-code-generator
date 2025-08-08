@@ -1,5 +1,6 @@
 package cn.rescld.aicodegeneratebackend.model.entity;
 
+import com.mybatisflex.annotation.Column;
 import com.mybatisflex.annotation.Id;
 import com.mybatisflex.annotation.KeyType;
 import com.mybatisflex.annotation.Table;
@@ -89,6 +90,7 @@ public class App implements Serializable {
     /**
      * 是否删除
      */
+    @Column(isLogicDelete = true)
     private Integer isDelete;
 
 }

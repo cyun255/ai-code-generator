@@ -16,7 +16,6 @@ import cn.rescld.aicodegeneratebackend.model.dto.app.AppQueryRequest;
 import cn.rescld.aicodegeneratebackend.model.dto.app.AppUpdateRequest;
 import cn.rescld.aicodegeneratebackend.model.entity.App;
 import cn.rescld.aicodegeneratebackend.model.enums.CodeGenTypeEnum;
-import cn.rescld.aicodegeneratebackend.model.enums.IsDeleteEnum;
 import cn.rescld.aicodegeneratebackend.model.vo.AppVO;
 import cn.rescld.aicodegeneratebackend.service.AppService;
 import com.mybatisflex.core.paginate.Page;
@@ -140,7 +139,6 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
         App existingApp = this.queryChain()
                 .eq(App::getId, id)
                 .eq(App::getUserId, userId)
-                .eq(App::getIsDelete, IsDeleteEnum.NORMAL.getValue())
                 .one();
         ThrowUtils.throwIf(existingApp == null,
                 ErrorCode.PARAMS_ERROR, "应用不存在或无权限访问");
@@ -163,12 +161,11 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
         App existingApp = this.queryChain()
                 .eq(App::getId, id)
                 .eq(App::getUserId, userId)
-                .eq(App::getIsDelete, IsDeleteEnum.NORMAL.getValue())
                 .one();
         ThrowUtils.throwIf(existingApp == null,
                 ErrorCode.PARAMS_ERROR, "应用不存在");
 
-        return this.deleteApp(id);
+        return this.removeById(id);
     }
 
     @Override
@@ -190,7 +187,6 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
 
         this.queryChain()
                 .eq(App::getUserId, userId)
-                .eq(App::getIsDelete, IsDeleteEnum.NORMAL.getValue())
                 .like(App::getName, request.getName())
                 .orderBy(App::getCreateTime, false)
                 .page(page);
@@ -208,7 +204,6 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
 
         // 精选应用按优先级排序，优先级高的在前
         this.queryChain()
-                .eq(App::getIsDelete, IsDeleteEnum.NORMAL.getValue())
                 .like(App::getName, request.getName())
                 .orderBy(App::getPriority, false)
                 .orderBy(App::getCreateTime, false)
@@ -220,7 +215,7 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
     @Override
     public boolean adminDeleteApp(Long id) {
         validateAppById(id);
-        return this.deleteApp(id);
+        return this.removeById(id);
     }
 
     @Override
@@ -291,19 +286,6 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
     }
 
     /**
-     * 根据应用 id 逻辑删除
-     *
-     * @param id 应用 id
-     * @return {@code true} 删除成功 {@code false} 删除失败
-     */
-    private boolean deleteApp(Long id) {
-        App app = new App();
-        app.setId(id);
-        app.setIsDelete(IsDeleteEnum.DELETED.getValue());
-        return this.updateById(app);
-    }
-
-    /**
      * 根据 id 校验应用
      *
      * @param id 应用 id
@@ -315,7 +297,6 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
 
         App app = this.queryChain()
                 .eq(App::getId, id)
-                .eq(App::getIsDelete, IsDeleteEnum.NORMAL.getValue())
                 .one();
         ThrowUtils.throwIf(app == null, ErrorCode.PARAMS_ERROR, "应用不存在");
 

@@ -9,7 +9,6 @@ import cn.rescld.aicodegeneratebackend.common.ResultUtils;
 import cn.rescld.aicodegeneratebackend.exception.ErrorCode;
 import cn.rescld.aicodegeneratebackend.exception.ThrowUtils;
 import cn.rescld.aicodegeneratebackend.model.dto.user.*;
-import cn.rescld.aicodegeneratebackend.model.enums.IsDeleteEnum;
 import cn.rescld.aicodegeneratebackend.model.vo.UserVO;
 import com.mybatisflex.core.paginate.Page;
 import jakarta.annotation.Resource;
@@ -115,10 +114,7 @@ public class UserController {
     @DeleteMapping
     public BaseResponse<?> remove() {
         Long id = StpUtil.getLoginIdAsLong();
-        User user = userService.getById(id);
-        user.setIsDelete(IsDeleteEnum.DELETED.getValue());
-        boolean update = userService.updateById(user);
-        if (update) {
+        if (userService.removeById(id)) {
             return ResultUtils.success("用户删除成功");
         }
         return ResultUtils.error(ErrorCode.SYSTEM_ERROR, "用户删除失败");

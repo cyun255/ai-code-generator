@@ -5,7 +5,7 @@ import cn.hutool.crypto.digest.DigestUtil;
 import cn.rescld.aicodegeneratebackend.exception.ErrorCode;
 import cn.rescld.aicodegeneratebackend.exception.ThrowUtils;
 import cn.rescld.aicodegeneratebackend.model.dto.user.AdminUpdateRequest;
-import cn.rescld.aicodegeneratebackend.model.enums.IsDeleteEnum;
+import com.mybatisflex.core.logicdelete.LogicDeleteManager;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import cn.rescld.aicodegeneratebackend.model.entity.User;
 import cn.rescld.aicodegeneratebackend.mapper.UserMapper;
@@ -33,10 +33,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 ErrorCode.PARAMS_ERROR, "密码长度为8~32位");
 
         // 检查用户名是否已被注册
-        boolean exists = this.queryChain()
-                .eq(User::getUsername, username)
-                .exists();
-        ThrowUtils.throwIf(exists, ErrorCode.PARAMS_ERROR, "该账号已被注册");
+        LogicDeleteManager.execWithoutLogicDelete(() -> {
+            boolean exists = this.queryChain()
+                    .eq(User::getUsername, username)
+                    .exists();
+            ThrowUtils.throwIf(exists, ErrorCode.PARAMS_ERROR, "该账号已被注册");
+        });
 
         // 密码加密
         String salt = RandomUtil.randomString(8);
@@ -64,7 +66,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 根据用户名查询用户信息
         User user = this.queryChain()
                 .eq(User::getUsername, username)
-                .eq(User::getIsDelete, IsDeleteEnum.NORMAL)
                 .one();
         ThrowUtils.throwIf(user == null, ErrorCode.PARAMS_ERROR, "用户名或密码错误");
 
