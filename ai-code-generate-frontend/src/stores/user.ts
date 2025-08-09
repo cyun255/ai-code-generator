@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 import request from '@/request'
 import type { ApiResponse } from '@/types'
 
-type UserInfo = {
+export type UserVO = {
   id?: number | undefined
   username?: string | undefined
   name?: string | undefined
@@ -20,10 +20,10 @@ export type LoginInfo = {
 export type RegisterInfo = LoginInfo
 
 export const useUserStore = defineStore('user', () => {
-  const userInfo = reactive<UserInfo>({})
+  const userInfo = reactive<UserVO>({})
 
   const login = async (data: LoginInfo) => {
-    const response: ApiResponse<UserInfo> = await request.post('/user/login', data)
+    const response: ApiResponse<UserVO> = await request.post('/user/login', data)
     if (response.code === 0 && response.data) {
       userInfo.id = response.data.id
       userInfo.username = response.data.username
@@ -37,7 +37,7 @@ export const useUserStore = defineStore('user', () => {
   }
 
   const getInfo = async () => {
-    const response: ApiResponse<UserInfo> = await request.get(`/user`)
+    const response: ApiResponse<UserVO> = await request.get(`/user`)
     if (response.code === 0 && response.data) {
       userInfo.id = response.data.id
       userInfo.username = response.data.username
