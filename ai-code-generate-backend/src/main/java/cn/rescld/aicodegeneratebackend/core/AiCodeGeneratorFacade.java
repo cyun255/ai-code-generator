@@ -29,6 +29,7 @@ public class AiCodeGeneratorFacade {
      *
      * @param type        生成代码类型
      * @param userMessage 用户提示词
+     * @param appId       应用id
      * @return 文件保存的目录
      */
     public Flux<String> generateAndSaveCode(String userMessage, CodeGenTypeEnum type, Long appId) {
@@ -37,8 +38,8 @@ public class AiCodeGeneratorFacade {
         // 调用 AI 大模型生成代码
         Flux<String> result = null;
         switch (type) {
-            case SINGLE_HTML -> result = aiCodeService.generateSingleHtmlCode(userMessage);
-            case MULTI_FILE -> result = aiCodeService.generateMultiFileCode(userMessage);
+            case SINGLE_HTML -> result = aiCodeService.generateSingleHtmlCode(appId,userMessage);
+            case MULTI_FILE -> result = aiCodeService.generateMultiFileCode(appId, userMessage);
         }
 
         StringBuilder builder = new StringBuilder();

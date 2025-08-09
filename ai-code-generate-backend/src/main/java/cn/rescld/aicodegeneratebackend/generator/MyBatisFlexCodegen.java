@@ -11,7 +11,7 @@ import java.util.Map;
 public class MyBatisFlexCodegen {
 
     // 需要生成代码的表名
-    private final static String[] TABLES = {"app"};
+    private final static String[] TABLES = {"chat_history"};
 
     public static void main(String[] args) {
         // 读取配置信息
@@ -47,7 +47,8 @@ public class MyBatisFlexCodegen {
 
         // 设置表前缀和只生成哪些表，setGenerateTable 未配置时，生成所有表
         globalConfig.getStrategyConfig()
-                .setGenerateTable(TABLES);
+                .setGenerateTable(TABLES)
+                .setLogicDeleteColumn("is_delete");
 
         // 设置生成 entity 并启用 Lombok
         globalConfig.enableEntity()

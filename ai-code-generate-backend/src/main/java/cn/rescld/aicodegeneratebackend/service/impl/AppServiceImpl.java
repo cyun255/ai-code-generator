@@ -17,9 +17,11 @@ import cn.rescld.aicodegeneratebackend.model.dto.app.AppUpdateRequest;
 import cn.rescld.aicodegeneratebackend.model.entity.App;
 import cn.rescld.aicodegeneratebackend.model.entity.User;
 import cn.rescld.aicodegeneratebackend.model.enums.CodeGenTypeEnum;
+import cn.rescld.aicodegeneratebackend.model.enums.MessageTypeEnum;
 import cn.rescld.aicodegeneratebackend.model.vo.AppVO;
 import cn.rescld.aicodegeneratebackend.model.vo.UserVO;
 import cn.rescld.aicodegeneratebackend.service.AppService;
+import cn.rescld.aicodegeneratebackend.service.ChatHistoryService;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
@@ -49,6 +51,9 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
     @Resource
     private AppMapper appMapper;
 
+    @Resource
+    private ChatHistoryService chatHistoryService;
+
     @Override
     public Flux<String> chatToGenCode(Long appId, String message, Long uid) {
         // 校验应用信息
@@ -61,11 +66,26 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
         ThrowUtils.throwIf(!exists, ErrorCode.NO_AUTH_ERROR);
 
         // 获取应用生成类型
-        CodeGenTypeEnum type = CodeGenTypeEnum.getEnumByType(app.getCodeGenType());
-        ThrowUtils.throwIf(type == null, ErrorCode.PARAMS_ERROR);
+        String codeGenType = app.getCodeGenType();
+        CodeGenTypeEnum codeGenTypeEnum = CodeGenTypeEnum.getEnumByType(codeGenType);
+        ThrowUtils.throwIf(codeGenTypeEnum == null, ErrorCode.PARAMS_ERROR);
 
-        return aiCodeGeneratorFacade
-                .generateAndSaveCode(message, type, appId);
+        // 将用户提示词保存到数据库中
+        chatHistoryService.addChatMessage(message, MessageTypeEnum.USER.getType(), appId, uid);
+
+        // 与 AI 交互
+        Flux<String> aiResponse = aiCodeGeneratorFacade.generateAndSaveCode(message, codeGenTypeEnum, appId);
+
+        // 记录并保存 AI 提示词
+        StringBuilder builder = new StringBuilder();
+        return aiResponse
+                .doOnNext(builder::append)
+                .doOnComplete(() -> chatHistoryService.addChatMessage(builder.toString(),
+                        MessageTypeEnum.AI.getType(), appId, uid))
+                .doOnError(error -> {
+                    String errorMessage = "AI 回复失败：" + error.getMessage();
+                    chatHistoryService.addChatMessage(errorMessage, MessageTypeEnum.AI.getType(), appId, uid);
+                });
     }
 
     @Override

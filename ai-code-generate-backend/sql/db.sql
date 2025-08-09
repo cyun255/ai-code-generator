@@ -39,3 +39,19 @@ create table if not exists app
     index idx_name (name),
     index idx_user_id (user_id)
 ) comment '应用表';
+
+create table if not exists chat_history
+(
+    id           bigint      not null auto_increment comment 'id',
+    message      text        not null comment '消息',
+    message_type varchar(32) not null comment 'ai/user',
+    app_id       bigint      not null comment '应用id',
+    user_id      bigint      not null comment '用户id',
+    create_time  datetime    not null default current_timestamp comment '创建时间',
+    update_time  datetime    not null default current_timestamp on update current_timestamp comment '更新时间',
+    is_delete    tinyint     not null default 0 comment '是否删除',
+    primary key (id),
+    index idx_app_id (app_id),
+    index idx_create_time (create_time),
+    index idx_id_time (app_id, create_time)
+) comment '对话历史记录表';

@@ -15,14 +15,14 @@ class AiCodeServiceTest {
 
     @Test
     void generateSingleHtmlCode() {
-        Flux<String> chat = aiCodeService.generateSingleHtmlCode("跟我生成一个登录页面，不超过20行代码");
+        Flux<String> chat = aiCodeService.generateSingleHtmlCode(1L, "跟我生成一个登录页面，不超过20行代码");
         chat.subscribe(System.out::print);
         System.out.println();
     }
 
     @Test
     void generateMultiFileCode() {
-        Flux<String> chat = aiCodeService.generateMultiFileCode("跟我生成一个登录页面，不超过20行代码");
+        Flux<String> chat = aiCodeService.generateMultiFileCode(1L, "跟我生成一个登录页面，不超过20行代码");
         chat.subscribe(System.out::print);
         System.out.println();
     }
