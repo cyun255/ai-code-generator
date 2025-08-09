@@ -60,9 +60,9 @@ public class AppVO implements Serializable {
     private Integer priority;
 
     /**
-     * 创建用户 id
+     * 创建用户信息
      */
-    private Long userId;
+    private UserVO userVO;
 
     /**
      * 创建时间

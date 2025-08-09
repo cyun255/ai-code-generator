@@ -15,12 +15,16 @@ import cn.rescld.aicodegeneratebackend.model.dto.app.AppCreateRequest;
 import cn.rescld.aicodegeneratebackend.model.dto.app.AppQueryRequest;
 import cn.rescld.aicodegeneratebackend.model.dto.app.AppUpdateRequest;
 import cn.rescld.aicodegeneratebackend.model.entity.App;
+import cn.rescld.aicodegeneratebackend.model.entity.User;
 import cn.rescld.aicodegeneratebackend.model.enums.CodeGenTypeEnum;
 import cn.rescld.aicodegeneratebackend.model.vo.AppVO;
+import cn.rescld.aicodegeneratebackend.model.vo.UserVO;
 import cn.rescld.aicodegeneratebackend.service.AppService;
 import com.mybatisflex.core.paginate.Page;
+import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -28,7 +32,6 @@ import reactor.core.publisher.Flux;
 import java.io.File;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * 应用表 服务层实现。
@@ -36,11 +39,15 @@ import java.util.stream.Collectors;
  * @author 残云cyun
  * @since 2025-08-06
  */
+@Slf4j
 @Service
 public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppService {
 
     @Resource
     private AiCodeGeneratorFacade aiCodeGeneratorFacade;
+
+    @Resource
+    private AppMapper appMapper;
 
     @Override
     public Flux<String> chatToGenCode(Long appId, String message, Long uid) {
@@ -185,13 +192,13 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
         page.setPageNumber(request.getCurrent());
         page.setPageSize(request.getPageSize());
 
-        this.queryChain()
+        QueryWrapper queryWrapper = new QueryWrapper()
                 .eq(App::getUserId, userId)
                 .like(App::getName, request.getName())
-                .orderBy(App::getCreateTime, false)
-                .page(page);
+                .orderBy(App::getCreateTime, false);
 
-        return convertToVOPage(page);
+        Page<App> result = appMapper.paginateWithRelationsAs(page, queryWrapper, App.class);
+        return convertToVOPage(result);
     }
 
     @Override
@@ -270,19 +277,21 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
      * 将App分页结果转换为AppVO分页结果
      */
     private Page<AppVO> convertToVOPage(Page<App> page) {
-        List<AppVO> voList = page.getRecords().stream().map(app -> {
+        List<AppVO> list = page.getRecords().stream().map(app -> {
+            User user = app.getUser();
+            UserVO userVO = new UserVO();
+            BeanUtils.copyProperties(user, userVO);
+
             AppVO appVO = new AppVO();
             BeanUtils.copyProperties(app, appVO);
+            appVO.setUserVO(userVO);
             return appVO;
-        }).collect(Collectors.toList());
+        }).toList();
 
-        Page<AppVO> voPage = new Page<>();
-        voPage.setPageNumber(page.getPageNumber());
-        voPage.setPageSize(page.getPageSize());
-        voPage.setTotalRow(page.getTotalRow());
-        voPage.setTotalPage(page.getTotalPage());
-        voPage.setRecords(voList);
-        return voPage;
+        Page<AppVO> pageVO = new Page<>();
+        BeanUtils.copyProperties(page, pageVO);
+        pageVO.setRecords(list);
+        return pageVO;
     }
 
     /**

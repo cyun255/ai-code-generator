@@ -1,9 +1,7 @@
 package cn.rescld.aicodegeneratebackend.model.entity;
 
-import com.mybatisflex.annotation.Column;
-import com.mybatisflex.annotation.Id;
-import com.mybatisflex.annotation.KeyType;
-import com.mybatisflex.annotation.Table;
+import com.mybatisflex.annotation.*;
+
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
@@ -77,6 +75,9 @@ public class App implements Serializable {
      */
     private Long userId;
 
+    @RelationOneToOne(selfField = "userId", targetField = "id")
+    private User user;
+
     /**
      * 创建时间
      */
@@ -92,5 +93,4 @@ public class App implements Serializable {
      */
     @Column(isLogicDelete = true)
     private Integer isDelete;
-
 }
