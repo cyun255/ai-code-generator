@@ -1,6 +1,7 @@
 package cn.rescld.aicodegeneratebackend.core;
 
 import cn.rescld.aicodegeneratebackend.ai.AiCodeService;
+import cn.rescld.aicodegeneratebackend.ai.AiCodeServiceFactory;
 import cn.rescld.aicodegeneratebackend.core.parser.CodeParserExecutor;
 import cn.rescld.aicodegeneratebackend.core.saver.CodeFileSaverExecutor;
 import cn.rescld.aicodegeneratebackend.exception.ErrorCode;
@@ -22,7 +23,7 @@ import java.io.File;
 public class AiCodeGeneratorFacade {
 
     @Resource
-    private AiCodeService aiCodeService;
+    private AiCodeServiceFactory aiCodeServiceFactory;
 
     /**
      * 使用 AI 代码生成器的统一入口
@@ -34,6 +35,9 @@ public class AiCodeGeneratorFacade {
      */
     public Flux<String> generateAndSaveCode(String userMessage, CodeGenTypeEnum type, Long appId) {
         ThrowUtils.throwIf(type == null, ErrorCode.SYSTEM_ERROR, "生成方式不可为空");
+
+        // 根据应用 id 获取 AI 服务
+        AiCodeService aiCodeService = aiCodeServiceFactory.getAiCodeService(appId);
 
         // 调用 AI 大模型生成代码
         Flux<String> result = null;

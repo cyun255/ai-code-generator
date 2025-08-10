@@ -1,5 +1,6 @@
 package cn.rescld.aicodegeneratebackend.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.rescld.aicodegeneratebackend.exception.ErrorCode;
 import cn.rescld.aicodegeneratebackend.exception.ThrowUtils;
@@ -8,8 +9,13 @@ import com.mybatisflex.spring.service.impl.ServiceImpl;
 import cn.rescld.aicodegeneratebackend.model.entity.ChatHistory;
 import cn.rescld.aicodegeneratebackend.mapper.ChatHistoryMapper;
 import cn.rescld.aicodegeneratebackend.service.ChatHistoryService;
+import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.memory.chat.MessageWindowChatMemory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -18,6 +24,7 @@ import java.util.List;
  * @author 残云cyun
  * @since 2025-08-09
  */
+@Slf4j
 @Service
 public class ChatHistoryServiceImpl
         extends ServiceImpl<ChatHistoryMapper, ChatHistory>
@@ -61,5 +68,35 @@ public class ChatHistoryServiceImpl
                 .orderBy(ChatHistory::getCreateTime, false)
                 .limit(pageSize)
                 .list();
+    }
+
+    @Override
+    public int loadHistoryMessages(Long appId, MessageWindowChatMemory chatMemory, int count) {
+        // 查询历史记录
+        List<ChatHistory> chatHistoryList = this.queryChain()
+                .eq(ChatHistory::getAppId, appId)
+                .lt(ChatHistory::getCreateTime, LocalDateTime.now().toString())
+                .orderBy(ChatHistory::getCreateTime, false)
+                // 用户请求时，第一时间就会将提示词加入数据库
+                // 这里需要过滤掉用户刚发送的提示词，所以 offset = 1
+                .limit(1, count)
+                .list();
+        if (CollUtil.isEmpty(chatHistoryList)) {
+            return 0;
+        }
+
+        // 查询时是按照时间降序排列，要翻转后交给 AI
+        chatHistoryList = chatHistoryList.reversed();
+
+        // 先清空历史记录，防止重复
+        chatMemory.clear();
+        for (ChatHistory chatHistory : chatHistoryList) {
+            switch (MessageTypeEnum.getEnumByType(chatHistory.getMessageType())) {
+                case AI -> chatMemory.add(AiMessage.from(chatHistory.getMessage()));
+                case USER -> chatMemory.add(UserMessage.from(chatHistory.getMessage()));
+                case null -> log.error("错误历史记录类型，id: {}", chatHistory.getId());
+            }
+        }
+        return chatHistoryList.size();
     }
 }

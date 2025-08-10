@@ -2,6 +2,7 @@ package cn.rescld.aicodegeneratebackend.service;
 
 import com.mybatisflex.core.service.IService;
 import cn.rescld.aicodegeneratebackend.model.entity.ChatHistory;
+import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 
 import java.util.List;
 
@@ -36,4 +37,14 @@ public interface ChatHistoryService extends IService<ChatHistory> {
      */
     List<ChatHistory> chatHistoryList(Long appId, Long pageSize,
                                       String lastCreateTime);
+
+    /**
+     * 装载会话记忆
+     *
+     * @param appId      应用 id
+     * @param chatMemory 会话记忆对象
+     * @param count      加载条数
+     * @return 成功加载的条数
+     */
+    int loadHistoryMessages(Long appId, MessageWindowChatMemory chatMemory, int count);
 }
