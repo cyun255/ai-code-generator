@@ -18,10 +18,10 @@
       <a-dropdown v-else trigger="hover">
         <a-space>
           <a-avatar class="user-avatar">
-            <span v-show="!userStore.userInfo.avatar"
+            <span v-if="!userStore.userInfo.avatar"
               >{{ userStore.userInfo.name?.slice(0, 1) }}
             </span>
-            <img v-show="userStore.userInfo.avatar" :src="userStore.userInfo.avatar" />
+            <img v-else :src="userStore.userInfo.avatar" />
           </a-avatar>
           {{ userStore.userInfo.name || '未登录' }}
         </a-space>

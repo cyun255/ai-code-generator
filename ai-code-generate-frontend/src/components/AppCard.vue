@@ -31,8 +31,8 @@
       <template #actions>
         <div class="app-info">
           <a-avatar>
-            <span v-show="!userAvatar">{{ userName.slice(0, 1) }} </span>
-            <img v-show="userAvatar" :src="userAvatar" />
+            <span v-if="!userAvatar">{{ userName.slice(0, 1) }} </span>
+            <img v-else :src="userAvatar" />
           </a-avatar>
           <div class="app-description">
             <span class="app-name">{{ appName }}</span>
