@@ -11,7 +11,7 @@
                 <template #icon><icon-cloud-download /></template>
                 <template #default>下载代码</template>
               </a-button>
-              <a-button type="primary" class="deploy-btn">
+              <a-button type="primary" class="deploy-btn" @click="deployModal = true">
                 <template #icon><icon-upload /></template>
                 <template #default>部署应用</template>
               </a-button>
@@ -67,10 +67,31 @@
       :draggable="true"
       :mask="true"
       :visible="deleteModal"
+      :ok-loading="deleteLoading"
       @ok="deleteApp()"
       @cancel="deleteModal = false"
     >
       请确认是否删除该应用
+    </a-modal>
+    <a-modal
+      title="部署应用"
+      :draggable="true"
+      :mask="true"
+      :visible="deployModal"
+      :ok-loading="deployLoading"
+      @ok="deployApp"
+      @cancel="deployModal = false"
+    >
+      <span v-if="!app?.deployKey"> 请确认是否部署该应用？ </span>
+      <span v-else>
+        该应用已部署，是否重新部署？<a
+          :href="`${deployUrl}/${app?.deployKey}`"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {{ `${deployUrl}/${app?.deployKey}` }}
+        </a>
+      </span>
     </a-modal>
   </div>
 </template>
@@ -79,7 +100,7 @@
 import ChatInput from '@/components/ChatInput.vue'
 import MarkdownPreview from '@/components/MarkdownPreview.vue'
 import request from '@/request'
-import { DeleteAppById, GetAppById, type AppInfo } from '@/request/app'
+import { DeleteAppById, DeployAppById, GetAppById, type AppInfo } from '@/request/app'
 import type { ApiResponse } from '@/types'
 import { Message } from '@arco-design/web-vue'
 import { onMounted, ref, useTemplateRef, watch } from 'vue'
@@ -88,6 +109,7 @@ import { IconUpload, IconCloudDownload, IconDelete } from '@arco-design/web-vue/
 import router from '@/router'
 
 const previewUrl = import.meta.env.VITE_PREVIEW_BASE_URL as string
+const deployUrl = import.meta.env.VITE_DEPLOY_BASE_URL as string
 
 type MessageHistory = {
   id: string | undefined
@@ -109,6 +131,10 @@ const messages = ref<MessageHistory[]>([])
 const messageContainer = useTemplateRef('messageContainer')
 
 const deleteModal = ref(false)
+const deployModal = ref(false)
+
+const deleteLoading = ref(false)
+const deployLoading = ref(false)
 
 watch(messages, () => {}, {
   deep: true,
@@ -223,6 +249,7 @@ const sendMsg = async (prompt: string) => {
 }
 
 const deleteApp = async () => {
+  deleteLoading.value = true
   const response = await DeleteAppById(app.value?.id as string)
   if (response.data) {
     Message.info('删除应用成功')
@@ -232,6 +259,19 @@ const deleteApp = async () => {
   } else {
     Message.error('应用删除失败，请稍后重试')
   }
+  deleteLoading.value = false
+}
+
+const deployApp = async () => {
+  deployLoading.value = true
+  const response = await DeployAppById(app.value?.id as string)
+  if (response.code == 0) {
+    Message.info('应用部署成功')
+    getAppInfo()
+  } else {
+    Message.error('应用部署失败')
+  }
+  deployLoading.value = false
 }
 
 onMounted(async () => {

@@ -45,3 +45,9 @@ export const GetAppById: (id: string) => Promise<ApiResponse<AppInfo>> = async (
 export const DeleteAppById: (id: string) => Promise<ApiResponse<boolean>> = async (id: string) => {
   return await request.delete(`/app/${id}`)
 }
+
+export const DeployAppById: (id: string) => Promise<ApiResponse<string>> = async (id: string) => {
+  return await request.post('/app/deploy', {
+    appId: id,
+  })
+}
