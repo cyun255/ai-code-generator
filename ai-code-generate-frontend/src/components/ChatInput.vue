@@ -4,13 +4,18 @@
       :placeholder="placeholder"
       :auto-size="{ minRows: 3, maxRows: 5 }"
       rows="3"
-      @input="prompt = $event"
+      v-model="prompt"
     />
     <div class="actions">
       <a-button
         class="send-btn"
         shape="circle"
-        @click="$emit('sendMsg', prompt)"
+        @click="
+          () => {
+            $emit('sendMsg', prompt)
+            prompt = ''
+          }
+        "
         :disabled="!prompt.trim()"
       >
         <icon-arrow-up />

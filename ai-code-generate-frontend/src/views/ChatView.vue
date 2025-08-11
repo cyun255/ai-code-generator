@@ -15,14 +15,19 @@
                 <template #icon><icon-upload /></template>
                 <template #default>部署应用</template>
               </a-button>
-              <a-button type="primary" status="danger" class="delete-btn">
+              <a-button
+                type="primary"
+                status="danger"
+                class="delete-btn"
+                @click="deleteModal = true"
+              >
                 <template #icon><icon-delete /></template>
                 <template #default>删除应用</template>
               </a-button>
             </a-space>
           </a-col>
         </a-row>
-        <div class="chat-messages">
+        <div ref="messageContainer" class="chat-messages">
           <div v-for="msg in messages" :key="msg.id">
             <div v-if="msg.messageType === 'user'" class="user-msg">
               <p>{{ msg.message }}</p>
@@ -34,7 +39,7 @@
           class="chat-input"
           placeholder="描述越详细，页面越具体，还可以一步一步完善生成效果"
           style="--background-color-inner: #f5f6f6; --border-radius-size: 0px"
-          @send-msg="(prompt: string) => console.log(prompt)"
+          @send-msg="sendMsg"
         />
       </div>
     </div>
@@ -57,6 +62,16 @@
         <div class="resize-trigger"></div>
       </template>
     </a-resize-box>
+    <a-modal
+      title="删除应用"
+      :draggable="true"
+      :mask="true"
+      :visible="deleteModal"
+      @ok="deleteApp()"
+      @cancel="deleteModal = false"
+    >
+      请确认是否删除该应用
+    </a-modal>
   </div>
 </template>
 
@@ -64,31 +79,36 @@
 import ChatInput from '@/components/ChatInput.vue'
 import MarkdownPreview from '@/components/MarkdownPreview.vue'
 import request from '@/request'
-import { GetAppById, type AppInfo } from '@/request/app'
+import { DeleteAppById, GetAppById, type AppInfo } from '@/request/app'
 import type { ApiResponse } from '@/types'
 import { Message } from '@arco-design/web-vue'
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, ref, useTemplateRef, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { IconUpload, IconCloudDownload, IconDelete } from '@arco-design/web-vue/es/icon'
+import router from '@/router'
 
 const previewUrl = import.meta.env.VITE_PREVIEW_BASE_URL as string
 
-type Message = {
-  id: string
+type MessageHistory = {
+  id: string | undefined
   message: string
   messageType: string
-  appId: string
-  userId: string
-  createTime: string
-  updateTime: string
+  appId: string | undefined
+  userId: string | undefined
+  createTime: string | undefined
+  updateTime: string | undefined
 }
 
 const route = useRoute()
 
 const width = ref(0)
+const lastCreateTime = ref('')
 const previewLoading = ref(false)
 const app = ref<AppInfo | null>(null)
-const messages = ref<Message[]>([])
+const messages = ref<MessageHistory[]>([])
+const messageContainer = useTemplateRef('messageContainer')
+
+const deleteModal = ref(false)
 
 watch(messages, () => {}, {
   deep: true,
@@ -109,10 +129,7 @@ window.onresize = () => {
   width.value = window.innerWidth * 0.6
 }
 
-onMounted(async () => {
-  width.value = window.innerWidth * 0.6
-  const lastCreateTime = getNowTime()
-
+const getAppInfo = async () => {
   const appId = route.params.id
   if (!appId) return
 
@@ -121,17 +138,118 @@ onMounted(async () => {
   if (!app.value) {
     // Handle case where app is not found
     Message.error('应用不存在')
-    return
+    return false
   }
+  return true
+}
 
-  const history: ApiResponse<Message[]> = await request.get('/chat_history/list', {
+const getHistory = async (count: number) => {
+  const history: ApiResponse<MessageHistory[]> = await request.get('/chat_history/list', {
     params: {
-      appId: 1,
-      count: 20,
-      lastCreateTime: lastCreateTime,
+      appId: app.value?.id,
+      count,
+      lastCreateTime: lastCreateTime.value,
     },
   })
   messages.value = history.data?.reverse() || []
+
+  lastCreateTime.value = messages.value[0]?.createTime || getNowTime()
+  return messages.value.length
+}
+
+const createUserMessage = (prompt: string) => {
+  const time = getNowTime()
+  const msg: MessageHistory = {
+    id: time,
+    message: prompt,
+    messageType: 'user',
+    appId: app.value?.id,
+    userId: app.value?.userId,
+    createTime: time,
+    updateTime: time,
+  }
+  messages.value.push(msg)
+}
+
+const createAiMessage = () => {
+  const time = getNowTime()
+  const msg: MessageHistory = {
+    id: time,
+    message: '',
+    messageType: 'ai',
+    appId: app.value?.id,
+    userId: app.value?.userId,
+    createTime: time,
+    updateTime: time,
+  }
+  messages.value.push(msg)
+}
+
+const scrollToBottom = () => {
+  messageContainer.value?.scrollTo({
+    top: messageContainer.value.scrollHeight,
+    behavior: 'smooth',
+  })
+}
+
+const sendMsg = async (prompt: string) => {
+  // 构造新的聊天气泡
+  createUserMessage(prompt)
+  createAiMessage()
+
+  // 获取后端响应
+  previewLoading.value = true
+  const base_url = import.meta.env.VITE_API_BASE_URL
+  const eventSource = new EventSource(
+    `${base_url}/app/chat?appId=${app.value?.id}&message=${prompt}`,
+    {
+      withCredentials: true,
+    },
+  )
+  eventSource.onmessage = (event) => {
+    const data = JSON.parse(event.data)
+    messages.value[messages.value.length - 1].message += data['d']
+    scrollToBottom()
+  }
+  eventSource.onerror = (err) => {
+    console.log('SSE 发生错误', err)
+    eventSource.close()
+  }
+  eventSource.addEventListener('done', () => {
+    console.log('SSE 传输结束')
+    eventSource.close()
+    previewLoading.value = false
+  })
+}
+
+const deleteApp = async () => {
+  const response = await DeleteAppById(app.value?.id as string)
+  if (response.data) {
+    Message.info('删除应用成功')
+    router.replace({
+      path: '/',
+    })
+  } else {
+    Message.error('应用删除失败，请稍后重试')
+  }
+}
+
+onMounted(async () => {
+  lastCreateTime.value = getNowTime()
+  width.value = window.innerWidth * 0.6
+
+  // 应用不存在
+  if (!(await getAppInfo())) {
+    return
+  }
+
+  // 获取历史记录
+  const count = await getHistory(20)
+  scrollToBottom()
+  if (count <= 0 && app.value) {
+    // 不存在历史记录，则在页面添加初始化提示词
+    sendMsg(app.value.initPrompt)
+  }
 })
 </script>
 

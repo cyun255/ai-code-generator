@@ -18,6 +18,14 @@ export type AppInfo = {
   userVO: UserVO
 }
 
+export const CreateApp: (initPrompt: string) => Promise<ApiResponse<bigint>> = async (
+  initPrompt: string,
+) => {
+  return await request.post('/app/create', {
+    initPrompt,
+  })
+}
+
 export const PageUserApps: (
   current: number,
   pageSize: number,
@@ -32,4 +40,8 @@ export const PageUserApps: (
 
 export const GetAppById: (id: string) => Promise<ApiResponse<AppInfo>> = async (id: string) => {
   return await request.get(`/app/${id}`)
+}
+
+export const DeleteAppById: (id: string) => Promise<ApiResponse<boolean>> = async (id: string) => {
+  return await request.delete(`/app/${id}`)
 }

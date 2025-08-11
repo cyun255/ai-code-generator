@@ -5,7 +5,7 @@
         <img src="/src/assets/logo.svg" alt="Logo" class="logo-img" />
         <span class="text">AI 应用生成平台</span>
       </div>
-      <chat-input placeholder="创建一个博客网站....... " class="chat-input" />
+      <chat-input placeholder="创建一个博客网站....... " @send-msg="createApp" class="chat-input" />
     </div>
     <div class="exhibition">
       <div class="self" v-show="userStore.userInfo.id">
@@ -49,8 +49,11 @@
 import AppCard from '@/components/AppCard.vue'
 import { onMounted, ref } from 'vue'
 import { useUserStore } from '@/stores/user'
-import { PageUserApps, type AppInfo } from '@/request/app'
+import { CreateApp, PageUserApps, type AppInfo } from '@/request/app'
+import { Message } from '@arco-design/web-vue'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const userStore = useUserStore()
 const userApps = ref<AppInfo[]>([])
 
@@ -62,6 +65,16 @@ const gridCols = {
   md: 2,
   lg: 3,
   xl: 4,
+}
+
+const createApp = async (initPrompt: string) => {
+  const response = await CreateApp(initPrompt)
+  if (response.code === 0) {
+    Message.info('应用创建成功')
+    router.push(`/chat/${response.data}`)
+  } else {
+    Message.error(response.message)
+  }
 }
 
 const fetchUserApps = async () => {
