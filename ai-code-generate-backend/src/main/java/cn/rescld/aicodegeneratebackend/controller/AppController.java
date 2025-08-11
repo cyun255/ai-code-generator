@@ -60,6 +60,7 @@ public class AppController {
                 .concatWith(Mono.just(
                         ServerSentEvent.<String>builder()
                                 .event("done")
+                                .data("")
                                 .build()
                 ));
     }
