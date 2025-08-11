@@ -6,7 +6,7 @@
           <template #extra>
             <div class="overlay">
               <a-space class="actions">
-                <a-button shape="round">
+                <a-button shape="round" @click="() => router.push(`/chat/${appId}`)">
                   <template #icon>
                     <icon-eye />
                   </template>
@@ -46,10 +46,16 @@
 
 <script setup lang="ts">
 import { IconLink, IconEye } from '@arco-design/web-vue/es/icon'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const deployBaseUrl = import.meta.env.VITE_DEPLOY_BASE_URL
 
 defineProps({
+  appId: {
+    type: String,
+    default: '',
+  },
   appName: {
     type: String,
     default: '应用名称',

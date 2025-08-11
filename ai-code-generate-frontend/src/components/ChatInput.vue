@@ -1,13 +1,18 @@
 <template>
   <div class="chat-input">
     <a-textarea
-      placeholder="创建一个博客网站......."
+      :placeholder="placeholder"
       :auto-size="{ minRows: 3, maxRows: 5 }"
-      rows="4"
+      rows="3"
       @input="prompt = $event"
     />
     <div class="actions">
-      <a-button class="send-btn" shape="circle" @click="sendMessage" :disabled="!prompt.trim()">
+      <a-button
+        class="send-btn"
+        shape="circle"
+        @click="$emit('sendMsg', prompt)"
+        :disabled="!prompt.trim()"
+      >
         <icon-arrow-up />
       </a-button>
     </div>
@@ -18,13 +23,14 @@
 import { ref } from 'vue'
 import { IconArrowUp } from '@arco-design/web-vue/es/icon'
 
+defineProps({
+  placeholder: {
+    type: String,
+    default: '请输入消息...',
+  },
+})
+
 const prompt = ref('')
-const sendMessage = () => {
-  if (!prompt.value.trim()) {
-    return
-  }
-  console.log('发送消息:', prompt.value)
-}
 </script>
 
 <style lang="scss" scoped>
@@ -32,12 +38,13 @@ const sendMessage = () => {
   display: flex;
   flex-direction: column;
 
-  width: 100%;
-  max-width: 48rem;
+  --border-radius-size: 20px;
+  --background-color-inner: white;
+  --background-color-outer: white;
 
-  background-color: white;
+  background-color: var(--background-color-outer);
   padding: 10px;
-  border-radius: 20px;
+  border-radius: var(--border-radius-size);
   transition: 0.3s ease-in-out;
 
   &:hover {
@@ -46,17 +53,19 @@ const sendMessage = () => {
 
   :deep(.arco-textarea-wrapper) {
     border: none;
+    border-radius: var(--border-radius-size);
   }
 
   :deep(.arco-textarea) {
-    font-size: 16px;
-    background-color: white;
+    font-size: 0.875rem;
+    border-radius: var(--border-radius-size);
+    background-color: var(--background-color-inner);
   }
 
   .actions {
     display: flex;
-    justify-content: flex-end;
     margin-top: 10px;
+    justify-content: flex-end;
 
     .send-btn {
       color: white;

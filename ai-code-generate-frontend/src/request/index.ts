@@ -1,9 +1,17 @@
 import axios from 'axios'
+import JSONbig from 'json-bigint'
 
 const request = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || '',
   timeout: 10000, // 请求超时时间
   withCredentials: true, // 是否携带凭证
+  transformResponse: (data) => {
+    try {
+      return JSONbig.parse(data)
+    } catch {
+      return data
+    }
+  },
 })
 
 // 响应拦截器

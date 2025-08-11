@@ -5,7 +5,7 @@
         <img src="/src/assets/logo.svg" alt="Logo" class="logo-img" />
         <span class="text">AI 应用生成平台</span>
       </div>
-      <chat-input />
+      <chat-input placeholder="创建一个博客网站....... " class="chat-input" />
     </div>
     <div class="exhibition">
       <div class="self" v-show="userStore.userInfo.id">
@@ -14,6 +14,7 @@
           <a-grid :cols="gridCols" :col-gap="4" :row-gap="16" v-if="userApps.length > 0">
             <a-grid-item v-for="app in userApps" :key="app.id">
               <app-card
+                :app-id="app.id"
                 :app-name="app.name"
                 :cover="app.cover || undefined"
                 :user-name="app.userVO.name"
@@ -107,6 +108,11 @@ onMounted(() => {
         font-size: 36px;
         font-weight: bold;
       }
+    }
+
+    .chat-input {
+      width: 100%;
+      max-width: 48rem;
     }
   }
 

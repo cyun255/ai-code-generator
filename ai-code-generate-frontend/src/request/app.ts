@@ -29,3 +29,7 @@ export const PageUserApps: (
     },
   })
 }
+
+export const GetAppById: (id: string) => Promise<ApiResponse<AppInfo>> = async (id: string) => {
+  return await request.get(`/app/${id}`)
+}
