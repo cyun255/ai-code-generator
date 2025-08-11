@@ -67,7 +67,7 @@ import request from '@/request'
 import { GetAppById, type AppInfo } from '@/request/app'
 import type { ApiResponse } from '@/types'
 import { Message } from '@arco-design/web-vue'
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { IconUpload, IconCloudDownload, IconDelete } from '@arco-design/web-vue/es/icon'
 
@@ -89,6 +89,10 @@ const width = ref(0)
 const previewLoading = ref(false)
 const app = ref<AppInfo | null>(null)
 const messages = ref<Message[]>([])
+
+watch(messages, () => {}, {
+  deep: true,
+})
 
 const getNowTime = () => {
   const date = new Date()

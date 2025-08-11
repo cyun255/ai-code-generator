@@ -3,7 +3,7 @@
 </template>
 
 <script lang="ts" setup>
-import { defineProps } from 'vue'
+import { defineProps, watchEffect } from 'vue'
 import MarkdownIt from 'markdown-it'
 import hljs from 'highlight.js'
 
@@ -30,7 +30,11 @@ const md = MarkdownIt({
     return '<pre><code class="hljs">' + md.utils.escapeHtml(str) + '</code></pre>'
   },
 })
-const result = md.render(props.source)
+let result = md.render(props.source)
+
+watchEffect(() => {
+  result = md.render(props.source)
+})
 </script>
 
 <style scoped>
