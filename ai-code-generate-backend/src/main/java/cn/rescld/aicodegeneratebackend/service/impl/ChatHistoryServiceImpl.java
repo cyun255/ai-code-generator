@@ -5,6 +5,7 @@ import cn.hutool.core.util.StrUtil;
 import cn.rescld.aicodegeneratebackend.exception.ErrorCode;
 import cn.rescld.aicodegeneratebackend.exception.ThrowUtils;
 import cn.rescld.aicodegeneratebackend.model.enums.MessageTypeEnum;
+import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import cn.rescld.aicodegeneratebackend.model.entity.ChatHistory;
 import cn.rescld.aicodegeneratebackend.mapper.ChatHistoryMapper;
@@ -50,6 +51,15 @@ public class ChatHistoryServiceImpl
                 .messageType(messageType)
                 .build();
         return this.save(chatHistory);
+    }
+
+    @Override
+    public boolean deleteChatMessage(Long appId) {
+        ThrowUtils.throwIf(appId == null || appId <= 0, ErrorCode.PARAMS_ERROR, "应用不存在");
+
+        QueryWrapper wrapper = QueryWrapper.create()
+                .eq(ChatHistory::getAppId, appId);
+        return this.remove(wrapper);
     }
 
     @Override

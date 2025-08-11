@@ -28,6 +28,14 @@ public interface ChatHistoryService extends IService<ChatHistory> {
                            Long appId, Long userId);
 
     /**
+     * 根据应用 id 删除对用的历史记录
+     *
+     * @param appId 应用 id
+     * @return {@code true} 删除成功 @{@code false} 删除失败
+     */
+    boolean deleteChatMessage(Long appId);
+
+    /**
      * 根据游标查询历史聊天记录
      *
      * @param appId          应用 id

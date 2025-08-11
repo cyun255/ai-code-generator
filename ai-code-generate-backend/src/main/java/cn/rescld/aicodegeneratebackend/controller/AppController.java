@@ -12,6 +12,7 @@ import cn.rescld.aicodegeneratebackend.exception.ThrowUtils;
 import cn.rescld.aicodegeneratebackend.model.dto.app.*;
 import cn.rescld.aicodegeneratebackend.model.vo.AppVO;
 import cn.rescld.aicodegeneratebackend.service.AppService;
+import cn.rescld.aicodegeneratebackend.service.ChatHistoryService;
 import com.mybatisflex.core.paginate.Page;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +36,9 @@ public class AppController {
 
     @Resource
     private AppService appService;
+
+    @Resource
+    private ChatHistoryService chatHistoryService;
 
     @GetMapping("/chat")
     public Flux<ServerSentEvent<String>> chatToGenCode(@RequestParam Long appId,
@@ -127,7 +131,14 @@ public class AppController {
     @DeleteMapping("/{id}")
     public BaseResponse<Boolean> deleteUserApp(@PathVariable Long id) {
         Long userId = StpUtil.getLoginIdAsLong();
+
+        // 删除应用
         boolean result = appService.deleteUserApp(id, userId);
+
+        // 同时删除对应的聊天记录
+        if(!chatHistoryService.deleteChatMessage(id)) {
+            log.error("删除应用 {} 相关的历史记录失败", id);
+        }
 
         return ResultUtils.success(result);
     }
