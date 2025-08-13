@@ -2,6 +2,7 @@ package cn.rescld.aicodegeneratebackend.ai;
 
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.SystemMessage;
+import dev.langchain4j.service.TokenStream;
 import dev.langchain4j.service.UserMessage;
 import reactor.core.publisher.Flux;
 
@@ -23,4 +24,10 @@ public interface AiCodeService {
      */
     @SystemMessage(fromResource = "prompts/multi-file-system-prompt.txt")
     Flux<String> generateMultiFileCode(@MemoryId Long appId, @UserMessage String message);
+
+    /**
+     * 生成 Vue 项目代码
+     */
+    @SystemMessage(fromResource = "prompts/vue-project-system.prompt.txt")
+    TokenStream generateVueProjectCode(@MemoryId Long appId, @UserMessage String message);
 }

@@ -7,6 +7,7 @@ import cn.rescld.aicodegeneratebackend.core.saver.CodeFileSaverExecutor;
 import cn.rescld.aicodegeneratebackend.exception.ErrorCode;
 import cn.rescld.aicodegeneratebackend.exception.ThrowUtils;
 import cn.rescld.aicodegeneratebackend.model.enums.CodeGenTypeEnum;
+import dev.langchain4j.service.TokenStream;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -37,17 +38,47 @@ public class AiCodeGeneratorFacade {
         ThrowUtils.throwIf(type == null, ErrorCode.SYSTEM_ERROR, "生成方式不可为空");
 
         // 根据应用 id 获取 AI 服务
-        AiCodeService aiCodeService = aiCodeServiceFactory.getAiCodeService(appId);
+        AiCodeService aiCodeService = aiCodeServiceFactory.getAiCodeService(appId, type);
 
         // 调用 AI 大模型生成代码
-        Flux<String> result = null;
-        switch (type) {
-            case SINGLE_HTML -> result = aiCodeService.generateSingleHtmlCode(appId,userMessage);
-            case MULTI_FILE -> result = aiCodeService.generateMultiFileCode(appId, userMessage);
-        }
+        return switch (type) {
+            case SINGLE_HTML -> {
+                Flux<String> stringFlux = aiCodeService.generateSingleHtmlCode(appId, userMessage);
+                yield processSimpleStream(stringFlux, type, appId);
+            }
+            case MULTI_FILE -> {
+                Flux<String> stringFlux = aiCodeService.generateMultiFileCode(appId, userMessage);
+                yield processSimpleStream(stringFlux, type, appId);
+            }
+            case VUE_PROJECT -> {
+                TokenStream tokenStream = aiCodeService.generateVueProjectCode(appId, userMessage);
+                yield processTokenStream(tokenStream);
+            }
+        };
+    }
 
+    /**
+     * 将 TokenStream 转成外部使用的 Flux
+     */
+    private Flux<String> processTokenStream(TokenStream tokenStream) {
+        return Flux.create(sink -> {
+            tokenStream.onPartialResponse(sink::next)
+                    .onPartialThinking(partialThinking ->
+                            log.info("partial thinking:{}", partialThinking))
+                    .onError(error -> {
+                        log.info(error.getMessage());
+                        sink.error(error);
+                    })
+                    .start();
+        });
+    }
+
+    /**
+     * 处理简单的 Stream 流，保存文件
+     */
+    private Flux<String> processSimpleStream(Flux<String> stream, CodeGenTypeEnum type, Long appId) {
         StringBuilder builder = new StringBuilder();
-        return result
+        return stream
                 // 将每次生成的结果保存下来
                 .doOnNext(builder::append)
                 // 全部完成后，将代码保存到本地

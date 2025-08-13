@@ -1,5 +1,7 @@
 package cn.rescld.aicodegeneratebackend.core.parser;
 
+import cn.rescld.aicodegeneratebackend.exception.BusinessException;
+import cn.rescld.aicodegeneratebackend.exception.ErrorCode;
 import cn.rescld.aicodegeneratebackend.model.enums.CodeGenTypeEnum;
 
 /**
@@ -21,6 +23,7 @@ public class CodeParserExecutor {
         return switch (codeGenTypeEnum) {
             case SINGLE_HTML -> singleHtmlCodeParser.parse(codeContent);
             case MULTI_FILE -> multiFileCodeParser.parse(codeContent);
+            default -> throw new BusinessException(ErrorCode.SYSTEM_ERROR, "不支持该代码生产方式");
         };
     }
 }

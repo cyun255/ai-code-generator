@@ -8,7 +8,8 @@ import lombok.Getter;
 public enum CodeGenTypeEnum {
 
     SINGLE_HTML("单 HTML 方式", "html"),
-    MULTI_FILE("原生多文件方式", "multi_file");
+    MULTI_FILE("原生多文件方式", "multi_file"),
+    VUE_PROJECT("Vue 工程化项目", "vue_project");
 
     private final String text;
     private final String type;

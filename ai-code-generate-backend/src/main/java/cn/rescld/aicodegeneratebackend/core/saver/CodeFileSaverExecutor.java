@@ -2,6 +2,8 @@ package cn.rescld.aicodegeneratebackend.core.saver;
 
 import cn.rescld.aicodegeneratebackend.ai.model.MultiFileCodeResult;
 import cn.rescld.aicodegeneratebackend.ai.model.SingleHtmlCodeResult;
+import cn.rescld.aicodegeneratebackend.exception.BusinessException;
+import cn.rescld.aicodegeneratebackend.exception.ErrorCode;
 import cn.rescld.aicodegeneratebackend.model.enums.CodeGenTypeEnum;
 
 import java.io.File;
@@ -18,6 +20,7 @@ public class CodeFileSaverExecutor {
         return switch (codeGenType) {
             case SINGLE_HTML -> singleHtmlCodeSaver.save((SingleHtmlCodeResult) result, appId);
             case MULTI_FILE -> multiCodeSaver.save((MultiFileCodeResult) result, appId);
+            default -> throw new BusinessException(ErrorCode.SYSTEM_ERROR, "不支持该类型方案保存方式");
         };
     }
 }
