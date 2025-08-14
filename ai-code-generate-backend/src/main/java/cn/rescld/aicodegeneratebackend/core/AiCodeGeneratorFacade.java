@@ -1,7 +1,11 @@
 package cn.rescld.aicodegeneratebackend.core;
 
+import cn.hutool.json.JSONUtil;
 import cn.rescld.aicodegeneratebackend.ai.AiCodeService;
 import cn.rescld.aicodegeneratebackend.ai.AiCodeServiceFactory;
+import cn.rescld.aicodegeneratebackend.ai.message.AiResponseMessage;
+import cn.rescld.aicodegeneratebackend.ai.message.ToolExecutedMessage;
+import cn.rescld.aicodegeneratebackend.ai.message.ToolRequestMessage;
 import cn.rescld.aicodegeneratebackend.core.parser.CodeParserExecutor;
 import cn.rescld.aicodegeneratebackend.core.saver.CodeFileSaverExecutor;
 import cn.rescld.aicodegeneratebackend.exception.ErrorCode;
@@ -62,14 +66,23 @@ public class AiCodeGeneratorFacade {
      */
     private Flux<String> processTokenStream(TokenStream tokenStream) {
         return Flux.create(sink -> {
-            tokenStream.onPartialResponse(sink::next)
-                    .onPartialThinking(partialThinking ->
-                            log.info("partial thinking:{}", partialThinking))
+            tokenStream.onPartialResponse(response -> {
+                        AiResponseMessage aiResponseMessage = new AiResponseMessage(response);
+                        sink.next(JSONUtil.toJsonStr(aiResponseMessage));
+                    })
+                    .onPartialToolExecutionRequest((index, request) -> {
+                        ToolRequestMessage toolRequestMessage = new ToolRequestMessage(request);
+                        sink.next(JSONUtil.toJsonStr(toolRequestMessage));
+                    })
+                    .onToolExecuted(execution -> {
+                        ToolExecutedMessage toolExecutedMessage = new ToolExecutedMessage(execution);
+                        sink.next(JSONUtil.toJsonStr(toolExecutedMessage));
+                    })
+                    .onCompleteResponse(response -> sink.complete())
                     .onError(error -> {
                         log.info(error.getMessage());
                         sink.error(error);
-                    })
-                    .start();
+                    }).start();
         });
     }
 
