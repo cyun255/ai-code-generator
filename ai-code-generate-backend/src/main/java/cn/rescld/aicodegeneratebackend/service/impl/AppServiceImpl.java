@@ -4,6 +4,7 @@ import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IORuntimeException;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.rescld.aicodegeneratebackend.ai.AiCodeRoutingService;
 import cn.rescld.aicodegeneratebackend.constant.AppConstant;
 import cn.rescld.aicodegeneratebackend.core.AiCodeGeneratorFacade;
 import cn.rescld.aicodegeneratebackend.core.builder.VueProjectBuilder;
@@ -61,6 +62,9 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
 
     @Resource
     private VueProjectBuilder vueProjectBuilder;
+
+    @Resource
+    private AiCodeRoutingService aiCodeRoutingService;
 
     @Override
     public Flux<String> chatToGenCode(Long appId, String message, Long uid) {
@@ -158,8 +162,9 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
         app.setInitPrompt(initPrompt);
         // TODO: 应用名称先用提示词前12位，后续改成 AI 生成更合适的应用名称
         app.setName(initPrompt.substring(0, Math.min(12, initPrompt.length())));
-        // TODO: 这里先用多文件方式生成，后续改成动态选择不同生成方式
-        app.setCodeGenType(CodeGenTypeEnum.MULTI_FILE.getType());
+        // 通过 AI 智能路由，选择合适的代码生成方案
+        CodeGenTypeEnum routedCodeGenType = aiCodeRoutingService.routeCodeGenType(initPrompt);
+        app.setCodeGenType(routedCodeGenType.getType());
         this.save(app);
 
         // 返回应用 id
