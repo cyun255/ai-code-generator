@@ -25,6 +25,7 @@ import cn.rescld.aicodegeneratebackend.model.vo.AppVO;
 import cn.rescld.aicodegeneratebackend.model.vo.UserVO;
 import cn.rescld.aicodegeneratebackend.service.AppService;
 import cn.rescld.aicodegeneratebackend.service.ChatHistoryService;
+import cn.rescld.aicodegeneratebackend.service.ScreenshotService;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
@@ -65,6 +66,9 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
 
     @Resource
     private AiCodeRoutingService aiCodeRoutingService;
+
+    @Resource
+    private ScreenshotService screenshotService;
 
     @Override
     public Flux<String> chatToGenCode(Long appId, String message, Long uid) {
@@ -142,7 +146,9 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
         updateApp.setDeployTime(LocalDateTime.now());
         this.updateById(updateApp);
 
-        return AppConstant.DEPLOY_DOMAIN + "/" + deployKey;
+        String deployUrl = AppConstant.DEPLOY_DOMAIN + "/" + deployKey;
+        generateAndScreenshotAsync(appId, deployUrl);
+        return deployUrl;
     }
 
     @Override
@@ -360,5 +366,22 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
         ThrowUtils.throwIf(request == null, ErrorCode.PARAMS_ERROR);
         ThrowUtils.throwIf(request.getPageSize() > 20,
                 ErrorCode.PARAMS_ERROR, "一次最多只能查询20条信息");
+    }
+
+    /**
+     * 异步访问应用截图上传，并更新数据库信息
+     *
+     * @param appId     应用 id
+     * @param deployUrl 应用部署URL
+     */
+    private void generateAndScreenshotAsync(Long appId, String deployUrl) {
+        Thread.startVirtualThread(() -> {
+            String screenshotUrl = screenshotService.generateAndUploadScreenshot(deployUrl);
+            App app = new App();
+            app.setId(appId);
+            app.setCover(screenshotUrl);
+            boolean updated = this.updateById(app);
+            ThrowUtils.throwIf(!updated, ErrorCode.SYSTEM_ERROR, "更新应用封面失败");
+        });
     }
 }
