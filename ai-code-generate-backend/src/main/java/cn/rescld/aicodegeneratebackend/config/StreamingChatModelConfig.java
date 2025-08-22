@@ -22,6 +22,7 @@ public class StreamingChatModelConfig {
                 .modelName("deepseek-chat")
                 .logRequests(true)
                 .logResponses(true)
+                .maxTokens(8192)
                 .build();
     }
 
@@ -33,6 +34,7 @@ public class StreamingChatModelConfig {
                 .modelName("deepseek-reasoner")
                 .logRequests(true)
                 .logResponses(true)
+                .maxTokens(32768)
                 .build();
     }
 }
