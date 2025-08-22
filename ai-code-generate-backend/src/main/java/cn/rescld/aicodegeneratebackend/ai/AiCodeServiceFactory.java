@@ -95,10 +95,10 @@ public class AiCodeServiceFactory {
         MessageWindowChatMemory chatMemory = MessageWindowChatMemory.builder()
                 .id(appId)
                 .chatMemoryStore(redisChatMemoryStore)
-                .maxMessages(20)
+                .maxMessages(50)
                 .build();
 
-        int count = chatHistoryService.loadHistoryMessages(appId, chatMemory, 20);
+        int count = chatHistoryService.loadHistoryMessages(appId, chatMemory, 50);
         log.info("load chat history count:{}", count);
         return chatMemory;
     }
