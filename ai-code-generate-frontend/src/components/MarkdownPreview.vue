@@ -6,12 +6,15 @@
 import { defineProps, watchEffect } from 'vue'
 import MarkdownIt from 'markdown-it'
 import hljs from 'highlight.js'
+import typescript from 'highlight.js/lib/languages/typescript'
 
 import 'highlight.js/styles/github-dark.css'
 
 const props = defineProps<{
   source: string
 }>()
+
+hljs.registerLanguage('vue', typescript)
 
 const md = MarkdownIt({
   breaks: true,

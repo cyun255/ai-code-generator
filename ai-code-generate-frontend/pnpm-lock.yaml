@@ -26,6 +26,9 @@ importers:
       vue:
         specifier: ^3.5.17
         version: 3.5.18(typescript@5.8.3)
+      vue-hljs:
+        specifier: ^3.0.3
+        version: 3.0.3(highlight.js@11.11.1)(vue@3.5.18(typescript@5.8.3))
       vue-router:
         specifier: ^4.5.1
         version: 4.5.1(vue@3.5.18(typescript@5.8.3))
@@ -2042,6 +2045,12 @@ packages:
     peerDependencies:
       eslint: ^8.57.0 || ^9.0.0
 
+  vue-hljs@3.0.3:
+    resolution: {integrity: sha512-Ic7gkpQNm5pdYRpxfQ6zXoj9G8CrTVO9nzxpU/YovYtGWrtW9QYcWj74xcq7QbIc5JywcmJ0JrNpTsbjuxV1SQ==}
+    peerDependencies:
+      highlight.js: '>=10.0.0'
+      vue: ^3.0.0
+
   vue-router@4.5.1:
     resolution: {integrity: sha512-ogAF3P97NPm8fJsE4by9dwSYtDwXIY1nFY9T6DyQnGHd1E2Da94w9JIolpe42LJGIl0DwOHBi8TcRPlPGwbTtw==}
     peerDependencies:
@@ -4016,6 +4025,11 @@ snapshots:
       semver: 7.7.2
     transitivePeerDependencies:
       - supports-color
+
+  vue-hljs@3.0.3(highlight.js@11.11.1)(vue@3.5.18(typescript@5.8.3)):
+    dependencies:
+      highlight.js: 11.11.1
+      vue: 3.5.18(typescript@5.8.3)
 
   vue-router@4.5.1(vue@3.5.18(typescript@5.8.3)):
     dependencies:
