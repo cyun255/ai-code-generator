@@ -1,6 +1,8 @@
 package cn.rescld.aicodegeneratebackend.ai;
 
+import cn.rescld.aicodegeneratebackend.ai.tools.BaseTool;
 import cn.rescld.aicodegeneratebackend.ai.tools.FileWriteTool;
+import cn.rescld.aicodegeneratebackend.ai.tools.ToolManager;
 import cn.rescld.aicodegeneratebackend.exception.BusinessException;
 import cn.rescld.aicodegeneratebackend.exception.ErrorCode;
 import cn.rescld.aicodegeneratebackend.model.enums.CodeGenTypeEnum;
@@ -33,6 +35,9 @@ public class AiCodeServiceFactory {
 
     @Resource
     private ChatHistoryService chatHistoryService;
+
+    @Resource
+    private ToolManager toolManager;
 
     /**
      * 缓存 AiCodeService
@@ -76,7 +81,7 @@ public class AiCodeServiceFactory {
             case VUE_PROJECT -> AiServices.builder(AiCodeService.class)
                     .streamingChatModel(deepSeekReasonerModel)
                     .chatMemoryProvider(id -> chatMemory)
-                    .tools(new FileWriteTool())
+                    .tools(toolManager.getAllTools())
                     .hallucinatedToolNameStrategy(toolExecutionRequest ->
                             ToolExecutionResultMessage.from(toolExecutionRequest,
                                     "Error: there is no tool called " + toolExecutionRequest.name()))
