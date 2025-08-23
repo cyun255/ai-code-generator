@@ -1,5 +1,6 @@
 package cn.rescld.aicodegeneratebackend.ai.tools;
 
+import cn.hutool.core.io.FileUtil;
 import cn.hutool.json.JSONObject;
 import cn.rescld.aicodegeneratebackend.constant.AppConstant;
 import dev.langchain4j.agent.tool.P;
@@ -68,6 +69,7 @@ public class FileModifyTool extends BaseTool {
     @Override
     public String generateToolExecutedResult(JSONObject arguments) {
         String relativeFilePath = arguments.getStr("relativeFilePath");
+        String suffix = FileUtil.getSuffix(relativeFilePath);
         String oldContent = arguments.getStr("oldContent");
         String newContent = arguments.getStr("newContent");
         // 显示对比内容
@@ -75,14 +77,14 @@ public class FileModifyTool extends BaseTool {
                 [工具调用] %s %s
                 
                 替换前：
-                ```
+                ```%s
                 %s
                 ```
                 
                 替换后：
-                ```
+                ```%s
                 %s
                 ```
-                """, getDisplayName(), relativeFilePath, oldContent, newContent);
+                """, getDisplayName(), relativeFilePath, suffix, oldContent, suffix, newContent);
     }
 }
