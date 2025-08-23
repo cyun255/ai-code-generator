@@ -56,7 +56,7 @@ public class FileDirReadTool extends BaseTool {
             StringBuilder structure = new StringBuilder();
             structure.append("项目目录结构:\n");
             // 使用 Hutool 递归获取所有文件
-            List<File> allFiles = FileUtil.loopFiles(targetDir, file -> !shouldIgnore(file.getName()));
+            List<File> allFiles = FileUtil.loopFiles(targetDir, file -> !shouldIgnore(file.getPath()));
             // 按路径深度和名称排序显示
             allFiles.stream()
                     .sorted((f1, f2) -> {
@@ -94,8 +94,10 @@ public class FileDirReadTool extends BaseTool {
      */
     private boolean shouldIgnore(String fileName) {
         // 检查是否在忽略名称列表中
-        if (IGNORED_NAMES.contains(fileName)) {
-            return true;
+        for (String extension : IGNORED_NAMES) {
+            if (fileName.contains(extension)) {
+                return true;
+            }
         }
 
         // 检查文件扩展名
