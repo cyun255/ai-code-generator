@@ -52,7 +52,11 @@
     >
       <a-spin class="preview-loading" :loading="previewLoading" tip="加载中...">
         <iframe
-          :src="!previewLoading ? `${previewUrl}/${app?.codeGenType}_${app?.id as string}` : ''"
+          :src="
+            !previewLoading
+              ? `${previewUrl}/${app?.codeGenType}_${app?.id as string}${app?.codeGenType === 'vue_project' ? '/dist' : ''}`
+              : ''
+          "
           width="100%"
           height="100%"
           frameborder="0"
