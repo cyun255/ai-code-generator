@@ -204,5 +204,19 @@ public class UserController {
         return ResultUtils.success(vo);
     }
 
+    @SaCheckRole("admin")
+    @DeleteMapping("{id}")
+    public BaseResponse<?> deleteById(@PathVariable("id") Long id) {
+        ThrowUtils.throwIf(id == null || id <= 0, ErrorCode.PARAMS_ERROR);
+
+        User user = userService.getById(id);
+        ThrowUtils.throwIf(user == null, ErrorCode.OPERATION_ERROR, "用户不存在");
+
+        boolean result = userService.removeById(id);
+        ThrowUtils.throwIf(!result, ErrorCode.SYSTEM_ERROR, "删除失败");
+
+        return ResultUtils.success(null);
+    }
+
     // endregion
 }

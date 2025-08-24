@@ -85,7 +85,7 @@
           </a-table-column>
           <a-table-column title="创建时间" data-index="createTime" align="center" />
           <a-table-column title="更新时间" data-index="updateTime" align="center" />
-          <a-table-column title="是否删除" data-index="isDelete" align="center">
+          <a-table-column title="用户状态" data-index="isDelete" align="center">
             <template #cell="{ record }">
               <a-tag :color="record.isDelete === 0 ? 'green' : 'red'">
                 {{ record.isDelete === 0 ? '正常' : '已删除' }}
@@ -99,6 +99,12 @@
                   <icon-edit />
                 </template>
                 编辑
+              </a-button>
+              <a-button type="text" status="danger" size="small" @click="handleDelete(record)">
+                <template #icon>
+                  <icon-delete />
+                </template>
+                删除
               </a-button>
             </template>
           </a-table-column>
@@ -133,9 +139,6 @@
             <a-option :value="1">普通用户</a-option>
           </a-select>
         </a-form-item>
-        <a-form-item label="是否删除" field="isDelete">
-          <a-switch v-model="editForm.isDelete" :checked-value="1" :unchecked-value="0" />
-        </a-form-item>
       </a-form>
     </a-modal>
   </div>
@@ -143,8 +146,8 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
-import { Message } from '@arco-design/web-vue'
-import { IconSearch, IconRefresh, IconEdit } from '@arco-design/web-vue/es/icon'
+import { Message, Modal } from '@arco-design/web-vue'
+import { IconSearch, IconRefresh, IconEdit, IconDelete } from '@arco-design/web-vue/es/icon'
 import request from '@/request'
 import type { ApiResponse } from '@/types'
 
@@ -183,7 +186,6 @@ interface EditForm {
   name: string
   profile?: string
   role: number
-  isDelete: number
 }
 
 // 响应式数据
@@ -207,7 +209,6 @@ const editForm = reactive<EditForm>({
   name: '',
   profile: '',
   role: 1,
-  isDelete: 0,
 })
 
 // 获取用户列表
@@ -270,8 +271,29 @@ const handleEdit = (record: UserVO) => {
   editForm.name = record.name
   editForm.profile = record.profile || ''
   editForm.role = record.role
-  editForm.isDelete = record.isDelete
   editModalVisible.value = true
+}
+
+// 删除用户
+const handleDelete = (record: UserVO) => {
+  Modal.confirm({
+    title: '确认删除',
+    content: `确定要删除用户【${record.name}】吗？`,
+    onOk: async () => {
+      try {
+        const response: ApiResponse<object> = await request.delete(`/user/${record.id}`)
+        if (response.code === 0) {
+          Message.success('删除用户成功')
+          fetchUserList()
+        } else {
+          Message.error(response.message || '删除用户失败')
+        }
+      } catch (error) {
+        console.error('删除用户失败:', error)
+        Message.error('删除用户失败')
+      }
+    },
+  })
 }
 
 // 提交编辑
@@ -308,7 +330,7 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .manage-view {
-  padding: 0 24px;
+  padding: 24px;
   margin: 0 auto;
 
   .search-card {

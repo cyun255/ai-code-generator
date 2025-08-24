@@ -4,7 +4,6 @@ import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.time.LocalDateTime;
 
 @Data
 public class AdminUpdateRequest implements Serializable {
@@ -41,9 +40,4 @@ public class AdminUpdateRequest implements Serializable {
      * 0-admin; 1-user
      */
     private Integer role;
-
-    /**
-     * 是否删除
-     */
-    private Integer isDelete;
 }
